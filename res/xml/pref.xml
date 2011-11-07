@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <PreferenceCategory android:title="@string/setting_string" >
+
+        <ListPreference
+            android:defaultValue="44100"
+            android:entries="@array/freq_name"
+            android:entryValues="@array/freq_value"
+            android:key="freq_key"
+            android:title="@string/freq_setting" android:summary="@string/freq_summary"/>
+
+        <ListPreference
+            android:defaultValue="4"
+            android:entries="@array/buf_value"
+            android:entryValues="@array/buf_value"
+            android:key="buf_key"
+            android:title="@string/buf_setting" android:summary="@string/buf_summary"/>
+
+        <ListPreference
+            android:defaultValue="15"
+            android:entries="@array/delay_name"
+            android:entryValues="@array/delay_value"
+            android:key="delay_key"
+            android:title="@string/delay_setting" android:summary="@string/delay_summary"/>
+    </PreferenceCategory>
+
+</PreferenceScreen>

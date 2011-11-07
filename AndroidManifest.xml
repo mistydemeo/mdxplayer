@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+      package="com.bkc.android.mdxplayer"
+      android:versionCode="5" android:versionName="@string/app_version">
+    <uses-sdk android:minSdkVersion="4"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+
+    <application android:icon="@drawable/icon" android:label="@string/app_name" android:debuggable="false">
+        <activity 
+        	android:name="Player" android:label="@string/app_name" android:screenOrientation="unspecified" android:configChanges="keyboardHidden|orientation">
+        	<intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name="FileDiag" android:screenOrientation="unspecified" android:configChanges="keyboardHidden|orientation">
+        </activity>
+        <activity android:name="HelpActivity"></activity>
+        <service android:name="PCMRender"></service>
+        <activity android:name="KeyView"></activity>
+        <activity android:name="Setting"></activity>
+        
+    </application>
+</manifest>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">MDXPLAYER for Android</string>
+    <string name="app_version">2011-11-08</string>
+    
+    <string name="help_string">ヘルプ</string>
+    <string name="key_string">キービューア</string>
+    <string name="setting_string">設定</string>
+
+
+    <string name="buf_setting">バッファサイズ</string>
+    <string name="buf_summary">バッファサイズの変更は次の曲から反映されます</string>
+        
+    <string name="freq_setting">再生周波数</string>
+    <string name="freq_summary">再生周波数の設定を行います</string>
+
+    <string name="delay_setting">キービューア更新間隔</string>
+    <string name="delay_summary">ビューアの更新間隔を設定します</string>
+        
+</resources>
