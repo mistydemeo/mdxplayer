@@ -30,6 +30,8 @@ t_mdxmini mdx_data;
 
 int song_len = 0;
 int freq = 44100;
+char pcmdir[1024];
+
 
 //
 // log output
@@ -58,11 +60,26 @@ JNIEXPORT jint JNICALL Java_com_bkc_android_mdxplayer_PCMRender_sdrv_1num_1track
 	if ( op_mode == MODE_MDX )
 		return mdx_get_tracks ( &mdx_data );
 	if ( op_mode == MODE_PMD )
-		return 16;
-		//return pmd_get_tracks();
+		return pmd_get_tracks();
 	
 	return 0;
 }
+
+/*
+ * Class:     com_bkc_android_mdxplayer_PCMRender
+ * Method:    sdrv_setpcmdir
+ * Signature: (Ljava/lang/String;)V
+ */
+JNIEXPORT void JNICALL Java_com_bkc_android_mdxplayer_PCMRender_sdrv_1setpcmdir
+  (JNIEnv *env, jobject obj, jstring str)
+{
+	const char *s = (*env)->GetStringUTFChars(env,str, NULL);
+	
+	strcpy( pcmdir , s );
+	
+	(*env)->ReleaseStringUTFChars(env,str, s);
+}
+
 
 /*
  * Class:     com_bkc_android_mdxplayer_PCMRender
@@ -204,14 +221,14 @@ JNIEXPORT jboolean JNICALL Java_com_bkc_android_mdxplayer_PCMRender_sdrv_1open
 	{
 		op_mode = MODE_PMD;
 		pmd_setrate ( freq );
-		err = pmd_play ( file ); 
+		err = pmd_play ( file , pcmdir ); 
 	}
 	else
 	{
 		op_mode = MODE_MDX;
 		mdx_set_rate ( freq );
 
-		err = mdx_open( &mdx_data , (char *)file );
+		err = mdx_open( &mdx_data , (char *)file , pcmdir );
 	}
 	
 	output_log("freq = %d",freq);

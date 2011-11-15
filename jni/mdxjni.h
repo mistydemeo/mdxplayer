@@ -17,6 +17,14 @@ JNIEXPORT void JNICALL Java_com_bkc_android_mdxplayer_PCMRender_sdrv_1setrate
 
 /*
  * Class:     com_bkc_android_mdxplayer_PCMRender
+ * Method:    sdrv_setpcmdir
+ * Signature: (Ljava/lang/String;)V
+ */
+JNIEXPORT void JNICALL Java_com_bkc_android_mdxplayer_PCMRender_sdrv_1setpcmdir
+  (JNIEnv *, jobject, jstring);
+
+/*
+ * Class:     com_bkc_android_mdxplayer_PCMRender
  * Method:    sdrv_open
  * Signature: (Ljava/lang/String;)Z
  */

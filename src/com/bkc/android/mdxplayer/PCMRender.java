@@ -31,7 +31,8 @@ public class PCMRender extends Service
 {
 
 	private native void    sdrv_setrate(int rate);
-
+	private native void    sdrv_setpcmdir(String pcmdir);
+	
 	private native boolean sdrv_open(String path);
 	private native void    sdrv_close();
 	private native void    sdrv_render(short[] data,int samples);
@@ -346,7 +347,8 @@ public class PCMRender extends Service
     // PCM再生スレッドの作成
     private void startPCMdriver()
     {
-
+    	sdrv_setpcmdir("");
+    	
     	// オーディオスレッド
         c_runner = new PCMThread() 
         {
