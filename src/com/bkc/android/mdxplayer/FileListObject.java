@@ -48,6 +48,12 @@ public class FileListObject
 		return inst;
 	}
 	
+	public static FileListObject getTemporalInst()
+	{
+		return new FileListObject();
+	}
+
+	
 	public void setContext ( Context context )
 	{
 		songHelper = new SongDBHelper( context );
@@ -118,6 +124,10 @@ public class FileListObject
     	File[] lf = file.listFiles(getMDXfilter());
     	File pf = file.getParentFile();
     	
+    	// ファイル取得失敗
+    	if (lf == null)
+    		return -1;
+    	
     	List<File> files = null;
     	
     	// ファイルのソート
@@ -125,7 +135,8 @@ public class FileListObject
     	{
     		Arrays.sort(lf,new FileComparator());
     	}
-    	
+
+    	    	
     	afiles.clear();
     	afiles_name.clear();
     	files_len.clear();
@@ -169,6 +180,9 @@ public class FileListObject
     	if (path.contentEquals(""))
     		return;
     	
+    	if (songHelper == null)
+    		return;
+    	
     	SQLiteDatabase db = songHelper.getWritableDatabase();
     	
     	for (int i = 0; i < afiles.size(); i++)
@@ -200,6 +214,10 @@ public class FileListObject
     {
     	String where = "dir = ?";
     	String[] select = new String[] { path };
+    	
+    	if (songHelper == null)
+    		return;
+    		
      	SQLiteDatabase db = songHelper.getReadableDatabase();
      	Cursor c = db.query( songHelper.getTableName() , songHelper.getSelection(), where, select, null, null,
                 null);
@@ -230,11 +248,14 @@ public class FileListObject
     	// データベースの更新
     	updateDatabase( current_path );
     	
-    	if ( path.contentEquals(current_path) )
+    	if ( path.contentEquals( current_path ) )
     		return 0;
     	
        	if ( readDirectory( path ) < 0 )
+       	{
+       		current_path = "";
        		return -1;
+       	}
        	
        	// データベースの取得
        	readDatabase( path );

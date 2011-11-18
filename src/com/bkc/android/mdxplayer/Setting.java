@@ -7,7 +7,6 @@ public class Setting extends PreferenceActivity  {
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
-		// TODO Auto-generated method stub
 		super.onCreate(savedInstanceState);
 		addPreferencesFromResource(R.xml.pref);
 	}
@@ -15,7 +14,6 @@ public class Setting extends PreferenceActivity  {
 	/*
 	@Override
 	public boolean onPreferenceChange(Preference arg0, Object arg1) {
-		// TODO Auto-generated method stub
 		return true;
 	}*/
 

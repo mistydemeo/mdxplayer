@@ -1,4 +1,4 @@
-MDXPLAYER for Android 2011-11-08
+MDXPLAYER for Android 2011-11-18
 
 ・説明
 
@@ -32,6 +32,10 @@ mdxmini ( based on mdxplay )
 
 
 ・履歴
+2011-11-18
+PCMフォルダの設定を追加
+各種バグ修正
+
 2011-11-08
 タイトルを変更した
 初回再生時にボリュームが反映されないバグを修正

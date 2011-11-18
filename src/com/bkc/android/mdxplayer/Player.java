@@ -10,6 +10,7 @@ import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.os.Bundle;
 import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -34,17 +35,17 @@ public class Player extends Activity implements OnClickListener , NotifyBind
 
 	String TAG = "MDXPlayer";
 	String MDXPlayerTitle;
-	
-	String KEY_FILEOBJ = "fobj";
-	String KEY_LASTFILE = "lastFile";
-	String KEY_LASTPATH = "lastPath";
-	String KEY_VOL = "volkey";
 
-	SharedPreferences pref;
+	static String KEY_PCMPATH  = "PCMPath";   
+	static String KEY_LASTFILE = "lastFile";
+	static String KEY_LASTPATH = "lastPath";
+	static String KEY_VOLUME = "volume";
+
 	final Handler ui_handler = new Handler();
 	
 	private FileListObject fobj = null;
 	private PCMService pcmService = new PCMService();
+	private StringBuilder infoSB = new StringBuilder();
 	
 	// 初期化
     @Override
@@ -59,12 +60,12 @@ public class Player extends Activity implements OnClickListener , NotifyBind
         
         
         // 例外ハンドラの設定        
-		Thread.setDefaultUncaughtExceptionHandler(
+		 Thread.setDefaultUncaughtExceptionHandler(
 				new EXUncaughtExceptionHandler(this));
 
         setContentView(R.layout.main);
         
-//		Log.d(TAG,"onCreate");
+		Log.d(TAG,"onCreate");
 
         // サービスへの接続
         doStartService();
@@ -91,11 +92,7 @@ public class Player extends Activity implements OnClickListener , NotifyBind
         ((ImageButton)findViewById(R.id.volup_btn)).setOnClickListener(this);
         ((ImageButton)findViewById(R.id.stop_btn)).setOnClickListener(this);
 
-        
-        pref = getSharedPreferences("mdxplay",MODE_PRIVATE);
-        fobj.openDirectory( pref.getString(KEY_LASTPATH, "") );
-        fobj.setCurrentFilePath( pref.getString(KEY_LASTFILE, "") );
- 
+        loadPref();
     }
     
     // メニュー作成
@@ -139,7 +136,7 @@ public class Player extends Activity implements OnClickListener , NotifyBind
         else
         {
         	PCMBound.setFobj( fobj );
-        	PCMBound.setVolume( pref.getInt( KEY_VOL , 100) );
+        	loadPref();
         	PCMBound.setTitle( MDXPlayerTitle );
         }
     	PCMBound.doUpdate();
@@ -246,30 +243,32 @@ public class Player extends Activity implements OnClickListener , NotifyBind
     	int len = PCMBound.getLen();
     	int pos = PCMBound.getPos();
     	boolean loop = PCMBound.getLoop();
-    	
-        seek_view.setMax( len );
-        seek_view.setProgress( pos );
-        
-        String time;
-        
+    	        
         if ( loop )
         {
-        	time = String.format( "%02d:%02d / --:--" , 
-    	   			pos / 60 , pos % 60 );
+        	infoSB.setLength(0);
+        	infoSB.append(String.format("%02d:%02d", pos/60,pos%60));
+        	infoSB.append(" / ");
+        	infoSB.append("--:--");
         }
         else
         {
-        	time = String.format( "%02d:%02d / %02d:%02d" , 
-	   			pos / 60 , pos % 60 ,
-	   			len / 60 , len % 60 );
+        	infoSB.setLength(0);
+        	infoSB.append(String.format("%02d:%02d", pos/60,pos%60));
+        	infoSB.append(" / ");
+        	infoSB.append(String.format("%02d:%02d", len/60,len%60));
         }
         
-	   	time_view.setText( time );
+	   	time_view.setText( infoSB );
+	   	
+        seek_view.setMax( len );
+        seek_view.setProgress( pos );
     }
     
     // 情報更新
 	private void updateInfo()
 	{
+		
 		if ( !PCMBound.isUpdate() )
 			return;
 		
@@ -285,6 +284,49 @@ public class Player extends Activity implements OnClickListener , NotifyBind
 
     	vol_view.setText(sb); 
 	}
+	
+	// 現在の設定を読み出す
+	public void loadPref()
+	{
+		SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
+        if (pref == null)
+        	return;
+        
+        if ( fobj != null )
+        {
+            fobj.openDirectory( pref.getString(KEY_LASTPATH, "") );
+            fobj.setCurrentFilePath( pref.getString(KEY_LASTFILE, "") );
+        }
+        if ( PCMBound != null )
+        {
+        	PCMBound.setVolume( pref.getInt( KEY_VOLUME , 100) );
+        }
+	}
+
+
+	// 現在の設定を保存する
+	public void savePref()
+	{
+		SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
+        if (pref == null)
+        	return;
+        
+        SharedPreferences.Editor edit = pref.edit();
+        
+        if (edit == null)
+        	return;
+        
+        if ( fobj != null )
+        {
+        	edit.putString( KEY_LASTPATH, fobj.current_path );
+        	edit.putString( KEY_LASTFILE, fobj.path );
+        }
+        if ( PCMBound != null )
+        {
+        	edit.putInt( KEY_VOLUME , PCMBound.getVolume() );
+        }
+    	edit.commit();
+	}
     
 	/////////////////////////////
     // Activity遷移
@@ -293,12 +335,8 @@ public class Player extends Activity implements OnClickListener , NotifyBind
     {
     	Log.d(TAG,"onPause");
     	// 現在の設定を保存する
-		SharedPreferences.Editor edit = pref.edit();
-		edit.putString( KEY_LASTPATH, fobj.current_path );
-		edit.putString( KEY_LASTFILE, fobj.path );
-		edit.putInt( KEY_VOL , PCMBound.getVolume() );
-		edit.commit();
-		pcmService.doUnbindService( this );
+    	savePref();
+        pcmService.doUnbindService( this );
 		doCancelTimer();	    
 		
 		super.onPause();
@@ -427,9 +465,7 @@ public class Player extends Activity implements OnClickListener , NotifyBind
 		{
 			if ( result == RESULT_OK )	
 			{					
-				SharedPreferences.Editor edit = pref.edit();
-				edit.putString( KEY_LASTFILE, fobj.path );
-				edit.commit();
+				savePref();
 				
 				PCMBound.setFobj( fobj );
 				PCMBound.doPlaySong();

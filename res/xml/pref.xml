@@ -23,6 +23,23 @@
             android:entryValues="@array/delay_value"
             android:key="delay_key"
             android:title="@string/delay_setting" android:summary="@string/delay_summary"/>
-    </PreferenceCategory>
+        
+        <PreferenceScreen
+            android:key="pcm_key"
+            android:summary="@string/pcm_summary"
+            android:title="@string/pcm_name" >
+
+            <intent
+                android:action="android.intent.action.MAIN"
+                android:targetClass="com.bkc.android.mdxplayer.FileDiag"
+                android:targetPackage="com.bkc.android.mdxplayer" >
+
+                <extra
+                    android:name="dirMode"
+                    android:value="true" />
+            </intent>
+        </PreferenceScreen>
+
+</PreferenceCategory>
 
 </PreferenceScreen>

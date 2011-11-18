@@ -74,6 +74,7 @@ public class PCMRender extends Service
 	private int     song_vol = 100;
 	private float   song_volstep = 0;
 	private boolean song_loop_inf = false;
+	private String  song_pcmpath = "";
 
 	private int pcm_rate = 0;
 	
@@ -414,7 +415,7 @@ public class PCMRender extends Service
                 atUpdateConfig = false;
                 atWriteFrame = 0;
 
-                atPCM = new short[atBufSize];
+                atPCM = new short[ atBufSize * 2];
             }
             
             // オーディオ音量設定
@@ -499,6 +500,13 @@ public class PCMRender extends Service
             		isPlaying = false;
             		sdrv_close();
             	}
+            	SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(PCMRender.this);
+            	
+            	if (sp != null)
+            	{
+            		song_pcmpath = sp.getString( Player.KEY_PCMPATH, "" );
+            		sdrv_setpcmdir( song_pcmpath );
+            	}
 
             	// ファイルチェック
             	File file = new File( fobj.path );
@@ -557,12 +565,15 @@ public class PCMRender extends Service
 				// audioInit();
 				
                 int outframes = 0;
+                // サイズが大きいとUIフリーズバグが発生する
                 int atPackSize = 2048;
                 
                 long lastTime = SystemClock.uptimeMillis();
                 long diffTime = 0;
                 
-                long oldPos = 0;
+                long oldPos = 0;                
+        		int[] notes = new int[64];
+
                 
                 stop_flag = false;
                                 
@@ -614,29 +625,32 @@ public class PCMRender extends Service
 
                 	if ( isPlaying && at != null )
                 	{
+                		// TODO : leaked!!
                 		sdrv_render( atPCM , atPackSize / 2 );
                 		int bufsize = at.write( atPCM , 0 , atPackSize ); 
 
                 		// バッファ位置への加算
                 		atBufPos += bufsize;
                 		atWriteFrame += (bufsize / 2);
-
-                		// 現在の音階データを取得
-                		int len = getTracks();
-                		int[] notes = new int[32];
-                		Integer[] notes_obj = new Integer[32];
                 		
-                		sdrv_get_note( notes, len );
-                		
-                		// 非効率変換...
-                		for ( int i = 0; i < len; i++ )
-                		{
-                			notes_obj[i] = notes[i];
-                		}
                 		
                 		// バッファに追加
-                		NoteDataStack.add( notes_obj );
-                		NoteTimeStack.add( atWriteFrame );
+                		if (NoteDataStack.size() < 64)
+                		{
+                    		// 現在の音階データを取得
+                    		int len = getTracks();
+                    		Integer[] notes_obj = new Integer[64];
+                    		
+                    		sdrv_get_note( notes, len );
+                			// 非効率変換...
+                			for ( int i = 0; i < len; i++ )
+                			{
+                				notes_obj[i] = notes[i];
+                			}
+
+                			NoteDataStack.add( notes_obj );
+                			NoteTimeStack.add( atWriteFrame );
+                		}
 
                 		// バッファが満たされたら再生開始  		
                 		if (!atPlay && atBufPos >= atMinBuf)

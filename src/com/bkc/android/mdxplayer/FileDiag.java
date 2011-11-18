@@ -9,12 +9,15 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Environment;
+import android.preference.PreferenceManager;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
+import android.widget.Button;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
+import android.widget.TextView;
 import android.widget.Toast;
 
 public class FileDiag extends Activity implements OnClickListener, OnItemClickListener {
@@ -25,7 +28,11 @@ public class FileDiag extends Activity implements OnClickListener, OnItemClickLi
 	
 	
 	FileListObject fobj = null;
-    String KEY_LASTPATH = "lastPath";
+    static String KEY_DIRMODE = "dirMode";
+    
+    private boolean dirMode = false;
+    private String lastPath = "";
+    
     
 @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -34,50 +41,105 @@ public class FileDiag extends Activity implements OnClickListener, OnItemClickLi
         // ファイルダイアログの表示
         setContentView(R.layout.filediag);
         
-        // ファイルリストオブジェクトの取得 
-        fobj = FileListObject.getInst();
-      
-        getLastDirectory();
+        // Intentの取得
+		Intent intent = getIntent();	
+		dirMode = intent.getBooleanExtra( KEY_DIRMODE, false ); 
 
+		if ( dirMode == false )
+		{
+			// ファイルリストオブジェクトの取得 
+	        fobj = FileListObject.getInst();
+		}
+		else
+		{
+			// 仮ファイルリスト
+			fobj = FileListObject.getTemporalInst();
+		}
+
+        loadPref();
         
-        // 外部ストレージのパス
-        String abspath = Environment.getExternalStorageDirectory().getAbsolutePath();
-        
-        // すでにディレクトリが読まれている場合は情報を更新しない
-        if (! fobj.current_path.equals(""))
-        	abspath = fobj.current_path;
- 
-        if (fobj.openDirectory(abspath) < 0 || fobj.getNameList().size() < 1)
+        if ( getDirectory( lastPath ) < 0 &&
+        		getDirectory( Environment.getExternalStorageDirectory().getAbsolutePath() ) < 0)
         {
-        	
         	Toast.makeText(FileDiag.this, "Can't access SD Card!! \nPlease make sure unmounted!", Toast.LENGTH_LONG).show();
         	fobj.current_path = "";
-        }        	
-        makeFileList();
+        }
+        
+        
+        Button fileOk = (Button)this.findViewById(R.id.file_ok);
+        if ( dirMode == false )
+               	fileOk.setVisibility(Button.GONE);
 
-        // ((Button)this.findViewById(R.id.file_cancel)).setOnClickListener( this );        
+       	fileOk.setOnClickListener( this );
+        	
     }
 	
 	
 	@Override
 	protected void onDestroy() {
-		SharedPreferences.Editor edit = getSharedPreferences("mdxplay",MODE_PRIVATE).edit();
-		edit.putString( KEY_LASTPATH, fobj.current_path );
-		edit.commit();
-
+		savePref();
 		super.onDestroy();
 	}
-
-	// 最後に開いたディレクトリを開く
-	private void getLastDirectory()
+	
+	private void savePref()
 	{
-		SharedPreferences pref = getSharedPreferences("mdxplay",MODE_PRIVATE);    
+		SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
 		
-		fobj.current_path = pref.getString( KEY_LASTPATH , "");
-        if (fobj.openDirectory( fobj.current_path ) < 0)
+		if (pref == null) return;
+		
+		SharedPreferences.Editor edit = pref.edit();
+		
+		if (edit == null) return;
+		
+		edit.putString( Player.KEY_LASTPATH, fobj.current_path );
+		edit.commit();
+	}
+	
+	private void savePrefForPCM()
+	{
+		SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
+		
+		if (pref == null) return;
+		
+		SharedPreferences.Editor edit = pref.edit();
+		
+		if (edit == null) return;
+		
+		edit.putString( Player.KEY_PCMPATH, fobj.current_path );
+		edit.commit();
+	}
+
+	
+	private void loadPref()
+	{
+		SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);   
+	
+		if (pref != null)
+			lastPath = pref.getString( Player.KEY_LASTPATH , "");
+		else
+			lastPath = "";
+	}
+	
+	private void setCurrentPathInfo()
+	{
+        TextView pathInfo = (TextView)this.findViewById(R.id.fileDiagText2);
+        pathInfo.setText( String.format("フォルダ:%s",fobj.current_path ));
+	}
+	
+
+	// ディレクトリを開く
+	private int getDirectory( String path )
+	{
+        if ( path.equals("") || fobj.openDirectory( path ) < 0 )
+        {
         	fobj.current_path = "";
+            makeFileList();
+        	return -1;
+        }
         
         makeFileList();
+        setCurrentPathInfo();
+        return 0;
 	}
 	
 	// 表示用ファイルリストの作成
@@ -123,17 +185,23 @@ public class FileDiag extends Activity implements OnClickListener, OnItemClickLi
         lv.setAdapter(adpt);
 
 	}
+	
+	private void finishForDirMode()
+	{
+		savePrefForPCM();
+		Intent intent = getIntent();
+		setResult(RESULT_OK,intent);
+		finish();
+	}
  
 	public void onClick(View v)
 	{
-/*		switch(v.getId())
+		switch(v.getId())
 		{
-		case R.id.file_cancel:
-			Intent intent = new Intent();
-			setResult(RESULT_CANCELED,intent);
-			finish();
+			case R.id.file_ok:
+				finishForDirMode();
 			break;
-		}*/
+		}
 	}
 	@Override
 	public void onItemClick(AdapterView<?> parent, View view, int pos, long id) 
@@ -143,17 +211,20 @@ public class FileDiag extends Activity implements OnClickListener, OnItemClickLi
 		if (file.isDirectory())
 		{
 			// ディレクトリを開く
-			fobj.openDirectory(file.getAbsolutePath());
-			makeFileList();
+			getDirectory( file.getAbsolutePath() );
 		}
 		else
 		{
-			Intent intent = getIntent();
-			
+			if ( dirMode == true )
+			{
+				finishForDirMode();
+				return;
+			}
 			// ファイルを開く
 			fobj.position = pos;
 			fobj.path = file.getAbsolutePath();
 			
+			Intent intent = getIntent();
 			setResult(RESULT_OK,intent);
 			finish();
 		}

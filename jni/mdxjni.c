@@ -23,11 +23,15 @@
 #define MODE_MDX 1
 #define MODE_PMD 2
 
+#define MAX_SIZE 256
+
+
 int pmdinit_flag = 0;
 
 int op_mode = 0;
 t_mdxmini mdx_data;
 
+int render_counter = 0;
 int song_len = 0;
 int freq = 44100;
 char pcmdir[1024];
@@ -231,7 +235,7 @@ JNIEXPORT jboolean JNICALL Java_com_bkc_android_mdxplayer_PCMRender_sdrv_1open
 		err = mdx_open( &mdx_data , (char *)file , pcmdir );
 	}
 	
-	output_log("freq = %d",freq);
+	output_log("freq = %d MAX_SIZE=%d DATE:%s TIME:%s",freq,MAX_SIZE,__DATE__,__TIME__);
 	
 	(*env)->ReleaseStringUTFChars( env , path , file );
 	
@@ -305,18 +309,20 @@ JNIEXPORT void JNICALL Java_com_bkc_android_mdxplayer_PCMRender_sdrv_1render
 	
 	while( left_samples > 0 )
 	{
-		if ( left_samples > 2048 )
+		// output_log("render_counter : %d\n",render_counter++);
+		if ( left_samples > MAX_SIZE )
 		{
 			if ( op_mode == MODE_MDX )
-				mdx_calc_sample( &mdx_data , sp + pos , 2048 );
+				mdx_calc_sample( &mdx_data , sp + pos , MAX_SIZE );
 			if ( op_mode == MODE_PMD )
-				pmd_renderer ( sp + pos , 2048 );
+				pmd_renderer ( sp + pos , MAX_SIZE );
 				
 			if (is_fade_run())
-				fade_stereo(sp + pos , 2048 );
+				fade_stereo(sp + pos , MAX_SIZE );
 			
-			left_samples -= 2048;
-			pos += 2048 * 2; // stereo
+			left_samples -= MAX_SIZE;
+			pos += MAX_SIZE * 2; // stereo
+
 		}
 		else 
 		{
@@ -328,7 +334,6 @@ JNIEXPORT void JNICALL Java_com_bkc_android_mdxplayer_PCMRender_sdrv_1render
 				
 			if (is_fade_run())
 				fade_stereo(sp + pos , left_samples );
-
 
 			left_samples = 0;
 		}
