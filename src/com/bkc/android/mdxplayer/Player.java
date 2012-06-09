@@ -1,10 +1,13 @@
 package com.bkc.android.mdxplayer;
 
+import java.io.File;
 import java.util.Timer;
 import java.util.TimerTask;
 
 import com.bkc.android.mdxplayer.R;
 import android.app.Activity;
+import android.app.Dialog;
+import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
@@ -17,7 +20,9 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.ViewGroup.LayoutParams;
 import android.widget.ImageButton;
+import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
 import android.widget.SeekBar;
 
@@ -31,7 +36,6 @@ public class Player extends Activity implements OnClickListener , NotifyBind
 	SeekBar  seek_view;
 	
 	private boolean isStartService = false;
-	private boolean isStoped = false;
 
 	String TAG = "MDXPlayer";
 	String MDXPlayerTitle;
@@ -74,6 +78,8 @@ public class Player extends Activity implements OnClickListener , NotifyBind
         fobj = FileListObject.getInst();
         fobj.setContext( getApplicationContext() );
         
+        // ビューの取得と設定
+        
         time_view  = (TextView)findViewById(R.id.time_value);
         title_view = (TextView)findViewById(R.id.title_value);
         file_view  = (TextView)findViewById(R.id.filename_value);
@@ -88,8 +94,6 @@ public class Player extends Activity implements OnClickListener , NotifyBind
         ((ImageButton)findViewById(R.id.play_btn)).setOnClickListener(this);
         ((ImageButton)findViewById(R.id.rev_btn)).setOnClickListener(this);
         ((ImageButton)findViewById(R.id.ff_btn)).setOnClickListener(this);
-        ((ImageButton)findViewById(R.id.voldown_btn)).setOnClickListener(this);
-        ((ImageButton)findViewById(R.id.volup_btn)).setOnClickListener(this);
         ((ImageButton)findViewById(R.id.stop_btn)).setOnClickListener(this);
 
         loadPref();
@@ -117,8 +121,89 @@ public class Player extends Activity implements OnClickListener , NotifyBind
 			case R.id.menuItem03:				
 				startKeyViewActivity();
 			return true;
+			case R.id.menuItem04:
+				openSongSelector();
+			return true;
+			case R.id.menuItem05:
+				// share
+				startShare();
+			return true;
+			case R.id.menuItem06:
+				// volume
+				startVolumeDialog();
+			return true;
 		}
 		return false;
+	}
+	
+	// 共有する
+	public void startShare()
+	{
+		Intent intent = new Intent ( android.content.Intent.ACTION_SEND );
+		intent.setType("text/plain");
+		
+		String content;
+		
+		// 再生中
+		if (PCMBound != null && PCMBound.isPlay())
+		{
+			content = String.format("Now Playing: %s #mdxplayer",PCMBound.getTitle() );
+		}
+		else
+		{
+			content = String.format("Starting Up: %s #mdxplayer",MDXPlayerTitle );
+		}
+		
+		intent.putExtra( Intent.EXTRA_TEXT, content );
+		startActivity ( 
+				Intent.createChooser ( 
+						intent , getString ( R.string.share_string ) 
+					) 
+		);
+
+	}
+	
+	// ダイアログ表示
+	public void startVolumeDialog()
+	{
+		Dialog dialog = new Dialog(this);
+
+		dialog.setContentView(R.layout.voldiag);
+		dialog.setTitle(getString(R.string.vol_string));
+		
+		SeekBar  volSeek = (SeekBar) dialog.findViewById(R.id.volseek1);
+		
+		volSeek.setMax( 100 );
+		
+		if ( PCMBound != null )
+			volSeek.setProgress( PCMBound.getVolume() );
+		else
+			volSeek.setProgress( 100 );
+		
+		volSeek.setOnSeekBarChangeListener(
+				new OnSeekBarChangeListener()
+				{
+		            public void onStopTrackingTouch(SeekBar seekbar) {
+		            }
+		 
+		            public void onStartTrackingTouch(SeekBar seekbar) {
+		            }
+		 
+		            public void onProgressChanged(SeekBar seekbar,
+		                    int vol, boolean flag) 
+		            {
+		            	PCMBound.setVolume(vol);
+		            }
+				}
+		);
+		
+		dialog.setCanceledOnTouchOutside( true );
+		
+	
+		// ダイアログ最大化
+		dialog.getWindow().setLayout(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT);
+		dialog.show();
+
 	}
 
 	// 接続通知
@@ -127,11 +212,21 @@ public class Player extends Activity implements OnClickListener , NotifyBind
     	PCMBound = pcm;
     	
 		Log.d(TAG,"notifyConnected");
+		
+		Intent MyIntent = new Intent( this,Player.class );
+		
+		PendingIntent cbIntent = 
+			PendingIntent.getActivity(
+					this , 
+					0 ,
+					MyIntent ,
+					0 );		
+		
+		PCMBound.setCallbackIntent( cbIntent );
+		
         if (PCMBound.isPlayed())
         {
         	fobj = PCMBound.getFobj();
-        	if ( PCMBound.isPlay() )
-        		setPauseButton( true );
         }
         else
         {
@@ -139,6 +234,20 @@ public class Player extends Activity implements OnClickListener , NotifyBind
         	loadPref();
         	PCMBound.setTitle( MDXPlayerTitle );
         }
+
+		if (Intent.ACTION_VIEW.equals(getIntent().getAction()))
+		{
+	        if ( fobj != null )
+	        {
+				PCMBound.doStop();
+
+	        	File file = new File(getIntent().getData().getPath());
+	            fobj.openDirectory( file.getParent() );
+	            fobj.setCurrentFilePath( file.getPath() );
+				PCMBound.doPlaySong();
+	        }
+		}
+        
     	PCMBound.doUpdate();
         doScheduleUpdateTimer();
     }
@@ -155,11 +264,22 @@ public class Player extends Activity implements OnClickListener , NotifyBind
     @Override
     public void onDestroy()
     {
-		Log.d(TAG,"onDestroy");	
+    	boolean isStop = false;
+
+    	Log.d(TAG,"onDestroy");	
 		
+		if ( PCMBound != null )
+		{
+			// 停止中?
+			isStop = PCMBound.getPause();
+
+			// 再生していない
+			if ( ! PCMBound.isPlay() ) 
+				isStop = true;
+		}
 		pcmService.doUnbindService( this );
 		
-		if ( isStoped )
+		if ( isStop )
 		{
 			Log.d(TAG,"StopService");
 			doStopService();
@@ -273,7 +393,12 @@ public class Player extends Activity implements OnClickListener , NotifyBind
 			return;
 		
 		updateTime();
-	   	
+		
+		if ( PCMBound.isPlay() && !PCMBound.getPause() )
+			((ImageButton)findViewById(R.id.play_btn)).setImageResource( R.drawable.pause );
+		else
+			((ImageButton)findViewById(R.id.play_btn)).setImageResource( R.drawable.play );
+			   	
         title_view.setText( PCMBound.getTitle() );
         file_view.setText( fobj.path );
         
@@ -374,15 +499,6 @@ public class Player extends Activity implements OnClickListener , NotifyBind
 		startActivityForResult(intent,0);
     }
     
-    // 再生ボタンの変更
-    private void setPauseButton( boolean pause_flag )
-    {
-		if ( pause_flag )
-			((ImageButton)findViewById(R.id.play_btn)).setImageResource( R.drawable.pause );
-		else
-			((ImageButton)findViewById(R.id.play_btn)).setImageResource( R.drawable.play );	
-    }
-    
     // ヘルプ画面の表示
     public void startHelpActivity()
     {
@@ -411,40 +527,25 @@ public class Player extends Activity implements OnClickListener , NotifyBind
 		switch(v.getId())
 		{
 		case R.id.play_btn:
-			isStoped = false;
 			if (PCMBound.isLoaded())
 			{
 				PCMBound.doPause();				
-				setPauseButton( ! PCMBound.getPause() );
 			}
 			else
 			{
 				PCMBound.doPlaySong();
-				setPauseButton( true );			
 			}
 			PCMBound.doUpdate();
 		break;
 		case R.id.stop_btn:
-			isStoped = true;
-			setPauseButton( false );
 			PCMBound.doStop();
-		break;			
-		case R.id.voldown_btn:
-			PCMBound.doVolumeDown();
-			PCMBound.doUpdate();
 		break;
-		case R.id.volup_btn:
-			PCMBound.doVolumeUp();
-			PCMBound.doUpdate();
-		break;			
 		case R.id.rev_btn:
 			PCMBound.doPlayPrevSong();
-			setPauseButton( true );
 			updateInfo();
 			break;
 		case R.id.ff_btn:
 			PCMBound.doPlayNextSong();
-			setPauseButton( true );
 			PCMBound.doUpdate();
 			break;
 		case R.id.time_value:
@@ -464,12 +565,11 @@ public class Player extends Activity implements OnClickListener , NotifyBind
 		if (reqCode == 0)
 		{
 			if ( result == RESULT_OK )	
-			{					
+			{			
 				savePref();
 				
 				PCMBound.setFobj( fobj );
 				PCMBound.doPlaySong();
-				setPauseButton( true );
 			}
 			else
 			{

@@ -1,9 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android" >
-    <item android:id="@+id/menuItem03" android:title="@string/key_string" android:icon="@android:drawable/ic_menu_view"></item><item android:id="@+id/menuItem01" android:title="@string/help_string" android:icon="@android:drawable/ic_menu_help"></item>
-    <item android:id="@+id/menuItem02" android:title="@string/setting_string" android:icon="@android:drawable/ic_menu_preferences"></item>
-    
 
+    <item
+        android:id="@+id/menuItem04"
+        android:icon="@android:drawable/ic_menu_gallery"
+        android:title="@string/song_string"></item>
     
+    <item
+        android:id="@+id/menuItem03"
+        android:icon="@android:drawable/ic_menu_view"
+        android:title="@string/key_string"></item>
 
+    <item
+        android:id="@+id/menuItem01"
+        android:icon="@android:drawable/ic_menu_help"
+        android:title="@string/help_string"></item>
+
+    <item
+        android:id="@+id/menuItem02"
+        android:icon="@android:drawable/ic_menu_preferences"
+        android:title="@string/setting_string"></item>
+
+    <item
+        android:id="@+id/menuItem05"
+        android:icon="@android:drawable/ic_menu_share"
+        android:title="@string/share_string"></item>
+    
+    <item
+        android:id="@+id/menuItem06"
+        android:title="@string/vol_string"></item>
+    
+    
+    
 </menu>

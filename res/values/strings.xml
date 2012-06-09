@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">MDXPLAYER for Android</string>
-    <string name="app_version">2011-11-18</string>
+    <string name="app_version">2012-06-09</string>
     
+    <string name="song_string">曲を開く</string>
     <string name="help_string">ヘルプ</string>
     <string name="key_string">キービューア</string>
     <string name="setting_string">設定</string>
@@ -18,5 +19,7 @@
     <string name="delay_summary">ビューアの更新間隔を設定します</string>
     <string name="pcm_name">PCMフォルダの設定</string>
     <string name="pcm_summary">PCMのフォルダを設定します</string>
+    <string name="share_string">共有</string>
+    <string name="vol_string">音量</string>
         
 </resources>

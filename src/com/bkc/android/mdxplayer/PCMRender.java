@@ -13,6 +13,9 @@ import java.io.UnsupportedEncodingException;
 import java.util.LinkedList;
 import java.util.Queue;
 
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -78,6 +81,10 @@ public class PCMRender extends Service
 
 	private int pcm_rate = 0;
 	
+	private NotificationManager notifMan;
+	private Notification notif;
+	private PendingIntent cbIntent;
+	
 	Handler handler = null;
 	
 	// 開始処理
@@ -88,7 +95,9 @@ public class PCMRender extends Service
 		Log.d(TAG, "onCreate");
 		
 		handler = new Handler();
-
+		
+		notifMan = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
+	
 		startPCMdriver();
 	}
 
@@ -133,6 +142,33 @@ public class PCMRender extends Service
 	public void setFobj(FileListObject fobj) {
 		this.fobj = fobj;
 	}
+	
+	// 通知表示
+	public void setNotif(String msg)
+	{
+		notif = new Notification(
+				R.drawable.icon,
+				msg,
+				System.currentTimeMillis()
+		);
+
+		notif.setLatestEventInfo(
+				getApplicationContext(),
+				getString(R.string.app_name),
+				msg,
+				cbIntent );
+		
+		notif.flags = Notification.FLAG_ONGOING_EVENT;
+
+		notifMan.notify( R.string.app_name , notif );		
+	}
+	
+	
+	// 呼び出しインテントの設定
+	public void setCallbackIntent(PendingIntent intent)
+	{
+		cbIntent = intent;
+	}
 
 	// 曲の再生を開始する
     public void doPlaySong()
@@ -152,6 +188,10 @@ public class PCMRender extends Service
     // 曲を停止
     public void doStop()
     {
+    	// 通知
+    	notifMan.cancel( R.string.app_name );
+    	
+    	
     	isUpdating = true;
     	isPausing = true;
     	song_pos = 0;
@@ -531,6 +571,9 @@ public class PCMRender extends Service
             	song_title = getMDXTitle();
             	song_pos = 0;
             	song_len = sdrv_length();
+            	
+            	// 通知
+            	setNotif( song_title );
             	
             	fobj.setCurrentSongTitle( song_title );
             	fobj.setCurrentSongLen( song_len );

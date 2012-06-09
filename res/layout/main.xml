@@ -59,28 +59,6 @@
         android:orientation="vertical" >
 
         <LinearLayout
-            android:id="@+id/linearLayout4"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content" >
-
-            <ImageButton
-                android:id="@+id/voldown_btn"
-                android:layout_width="50dip"
-                android:layout_height="50dip"
-                android:scaleType="fitCenter"
-                android:src="@drawable/voldown" >
-            </ImageButton>
-
-            <ImageButton
-                android:id="@+id/volup_btn"
-                android:layout_width="50dip"
-                android:layout_height="50dip"
-                android:scaleType="fitCenter"
-                android:src="@drawable/volup" >
-            </ImageButton>
-        </LinearLayout>
-
-        <LinearLayout
             android:id="@+id/linearLayout3"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" >
