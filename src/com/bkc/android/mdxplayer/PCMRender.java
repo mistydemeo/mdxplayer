@@ -340,7 +340,10 @@ public class PCMRender extends Service
     		return;
     	
     	for ( int i = 0; i < len; i++ )
-    		data[i] = currentNoteData[i];    	
+    	{
+    		if ( currentNoteData[i] != null )
+    			data[i] = currentNoteData[i];    	
+    	}
     }    
     
     // ‹È–¼‚ÌÝ’è

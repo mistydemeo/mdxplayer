@@ -1,4 +1,4 @@
-MDXPLAYER for Android 2012-06-09
+MDXPLAYER for Android 2012-06-10
 
 ・説明
 
@@ -32,6 +32,10 @@ mdxmini ( based on mdxplay )
 
 
 ・履歴
+2012-06-10
+通知から呼ばれた場合、再生中のファイルがズレる不具合の修正
+キービューアのバッファに関するバグ修正
+
 2012-06-09
 x86とMIPSの対応 ( MIPSは動作未確認 )
 停止ボタン表示の改良

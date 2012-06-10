@@ -64,7 +64,7 @@ public class Player extends Activity implements OnClickListener , NotifyBind
         
         
         // 例外ハンドラの設定        
-		 Thread.setDefaultUncaughtExceptionHandler(
+		Thread.setDefaultUncaughtExceptionHandler(
 				new EXUncaughtExceptionHandler(this));
 
         setContentView(R.layout.main);
@@ -96,7 +96,6 @@ public class Player extends Activity implements OnClickListener , NotifyBind
         ((ImageButton)findViewById(R.id.ff_btn)).setOnClickListener(this);
         ((ImageButton)findViewById(R.id.stop_btn)).setOnClickListener(this);
 
-        loadPref();
     }
     
     // メニュー作成
@@ -224,7 +223,7 @@ public class Player extends Activity implements OnClickListener , NotifyBind
 		
 		PCMBound.setCallbackIntent( cbIntent );
 		
-        if (PCMBound.isPlayed())
+        if ( PCMBound.isPlayed() )
         {
         	fobj = PCMBound.getFobj();
         }

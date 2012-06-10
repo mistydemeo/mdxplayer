@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">MDXPLAYER for Android</string>
-    <string name="app_version">2012-06-09</string>
+    <string name="app_version">2012-06-10</string>
     
     <string name="song_string">曲を開く</string>
     <string name="help_string">ヘルプ</string>
