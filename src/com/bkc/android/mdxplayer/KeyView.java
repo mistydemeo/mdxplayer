@@ -49,7 +49,7 @@ public class KeyView extends Activity implements NotifyBind
 		int maxOctave = 10;
 		int maxTones = maxOctave * toneInOctave;
 		
-		String noteName[] = { 
+		String[] noteName = { 
 				"c ","c+","d ","d+","e " ,
 				"f ","f+","g ","g+","a ","a","a+","b "
 		};
@@ -253,6 +253,7 @@ public class KeyView extends Activity implements NotifyBind
 			paint.setColor( colorFont );
 			paint.setTextSize( 20 );
 			
+			
 			clearCanvas();
 
 		}
@@ -261,31 +262,44 @@ public class KeyView extends Activity implements NotifyBind
 		
 		public void drawKey()
 		{
-			
+			int key_xstep = 20;
+			int line_step = 24;
+			int draw_h = 0;
 			checkUpdate();
 			
 			SurfaceHolder holder = psv.getHolder();
 			Canvas canvas = holder.lockCanvas();
-			
 
-			clearLine( canvas, 0 , 24 * 2 ); 
+			// TODO: sometimes thread calls drawKey before create surface.
+			draw_h = canvas.getHeight();	
+
+			clearLine( canvas, 0 , line_step * 2 ); 
 			
 			String infoTime = getCurrentTimeString();
 			canvas.drawText( 
 					songTitle,
 					0, 
-					24,
+					line_step,
 					paint );
 
 			canvas.drawText( 
 					infoTime,
 					0, 
-					48,
+					line_step * 2,
 					paint );
+			
+			int key_space = 4;
+			int key_ww = (key_w * maxOctave);
 
-			int key_y = 24 * 2 + 4;
-			int str_y = (int) ( key_y + paint.getTextSize() );
-			key_y += 24;
+			int str_h = 20;
+			int str_x = 0;
+			int key_x = 0;
+
+			int str_iy = ((int)line_step * 2) + str_h;
+			
+			int key_iy = str_iy + key_space;		
+			int key_y = key_iy;
+			int str_y = str_iy;
 			
 			// チャンネル分だけキーボードを描く
 			for (int i = 0; i < songMaxTone; i++ )
@@ -302,28 +316,36 @@ public class KeyView extends Activity implements NotifyBind
 				
 				songLastNotes[i] = data;
 				
-				clearLine( canvas, str_y - 20, 26 );
+				canvas.drawRect(str_x, str_y - str_h, str_x + key_ww, str_y + key_space, clearPaint);
+				// clearLine( canvas, str_y - 20, 26 );
 								
 				String noteInfo = "rest";
 
 				if (data >= 0)
-					noteInfo = String.format (
-							"o%d%s",
+					noteInfo = getString(R.string.note_info, 
 							data / toneInOctave ,
-							noteName [ data % toneInOctave ]
+							noteName[data % toneInOctave]
 						);
+				
 											
-				canvas.drawText (
-						String.format("CH%02d %s",
-								i + 1,
-								noteInfo )
-						, 0, str_y, paint );
+				canvas.drawText ( getString(R.string.ch_info,
+						i + 1,
+						noteInfo ) , str_x , str_y, paint );
 				
-				str_y = str_y + key_h + 24;
+				str_y = str_y + key_h + line_step;
 				
-				drawKeyboard( canvas , 0 , key_y , data , paint );
-				key_y = key_y + key_h + 24;
-
+				drawKeyboard( canvas , key_x , key_y , data , paint );
+				key_y = key_y + key_h + line_step;
+				
+				// 画面をはみ出るので次の列に
+				if (key_y + key_h >= draw_h )
+				{
+					str_x += key_ww + key_xstep;
+					key_x = str_x;
+					
+					str_y = str_iy; 
+					key_y = key_iy;
+				}
 			}
 			
 			holder.unlockCanvasAndPost(canvas);	

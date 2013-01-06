@@ -7,7 +7,7 @@
     <LinearLayout
         android:id="@+id/linearLayout2"
         android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
+        android:layout_height="0dip"
         android:layout_weight="1"
         android:orientation="vertical" >
 
@@ -20,15 +20,15 @@
             android:id="@+id/help_text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:padding="10px"
-            android:text="説明" />
+            android:padding="10dp"
+            android:text="@string/explain_string" />
 
         <TextView
             android:id="@+id/error_text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:padding="10px"
-            android:text="Error" />
+            android:padding="10dp"
+            android:text="@string/error_string" />
             
         </LinearLayout>
 
@@ -37,14 +37,13 @@
             android:id="@+id/scrollView1"
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
-            android:layout_weight="1"
-            android:padding="5px" >
+            android:padding="5dp" >
 
             <TextView
                 android:id="@+id/help_body"
                 android:layout_width="fill_parent"
-                android:layout_height="fill_parent"
-                android:text="example..." >
+                android:layout_height="wrap_content"
+                android:text="@string/space_string" >
             </TextView>
         </ScrollView>
     </LinearLayout>
@@ -58,11 +57,11 @@
 
         <Button
             android:id="@+id/help_ok"
-            android:layout_width="fill_parent"
+            android:layout_width="0dip"
             android:layout_height="fill_parent"
             android:layout_gravity="bottom"
             android:layout_weight="1"
-            android:text="ok" >
+            android:text="@string/ok_string" >
         </Button>
     </LinearLayout>
 

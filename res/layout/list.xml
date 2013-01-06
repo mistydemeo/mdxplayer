@@ -6,8 +6,8 @@
   android:id="@android:id/text1"
   android:layout_width="fill_parent"
   android:layout_height="wrap_content"
-  android:text="ファイル名" android:textSize="20sp">
+  android:text="@+id/filename_string" android:textSize="20sp">
   </TextView>
-  <TextView android:text="曲データ" android:id="@android:id/text2" android:layout_height="wrap_content" android:layout_width="fill_parent"></TextView>
+  <TextView android:text="@+id/songdata_string" android:id="@android:id/text2" android:layout_height="wrap_content" android:layout_width="fill_parent"></TextView>
 </LinearLayout>
  

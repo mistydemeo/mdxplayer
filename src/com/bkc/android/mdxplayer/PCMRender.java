@@ -404,9 +404,9 @@ public class PCMRender extends Service
             private int    atBufPos = 0;
             private int    atMinBuf = 0;
             
-            private int    atRate = 44100; // レート
+            private int    atRate = 0; // レート
+            private int    atBufBlocks = 0; // ブロック数
             private int    atUpdateFrame = 0; 
-            private int    atBufBlocks = 4; // ブロック数
             
             // 曲の頭の位置(単位:フレーム)
             private long   atSongHeadFrame = 0;
@@ -505,9 +505,11 @@ public class PCMRender extends Service
             {
             	int freq,buf;
             	SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(PCMRender.this);
-            	buf  = Integer.parseInt(sp.getString("buf_key", "4"));
-            	freq = Integer.parseInt(sp.getString("freq_key", "44100"));
             	
+            	// デフォルト設定
+            	buf  = Integer.parseInt(sp.getString("buf_key", getString(R.string.def_buf)));
+            	freq = Integer.parseInt(sp.getString("freq_key", getString(R.string.def_freq)));
+            	            	
             	if (atRate != freq || atBufBlocks != buf )
             	{
             		atUpdateConfig = true;
@@ -562,7 +564,7 @@ public class PCMRender extends Service
             			@Override
             			public void run() 
             			{
-            				String msg = String.format("File open error!! \nFile : %s", fobj.path);
+            				String msg = getString(R.string.openerror, fobj.path);
             				Toast.makeText(PCMRender.this, msg, Toast.LENGTH_LONG ).show();
             			}
             		});

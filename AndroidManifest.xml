@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
       package="com.bkc.android.mdxplayer"
-      android:versionCode="7" android:versionName="@string/app_version">
-    <uses-sdk android:minSdkVersion="4" android:targetSdkVersion="7"/>
+      android:versionCode="9" android:versionName="@string/app_version">
+    <uses-sdk android:minSdkVersion="7" android:targetSdkVersion="7"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
 
-    <application android:icon="@drawable/icon" android:label="@string/app_name" android:debuggable="false">
+    <application android:icon="@drawable/icon" android:label="@string/app_name">
         <activity 
         	android:name="Player" android:label="@string/app_name" android:screenOrientation="unspecified" android:configChanges="keyboardHidden|orientation">
         	<intent-filter>
@@ -15,12 +15,11 @@
             <intent-filter>
                 <action android:name="android.intent.action.VIEW"/>
                 <category android:name="android.intent.category.DEFAULT" />
-                <data android:host="*" android:scheme="file" android:pathPattern=".*\\.mdx"/>  
-                <data android:host="*" android:scheme="file" android:pathPattern=".*\\.m"/>  
-                <data android:host="*" android:scheme="file" android:pathPattern=".*\\.m2"/>  
-                <data android:host="*" android:scheme="file" android:pathPattern=".*\\.mz"/>  
-                <data android:host="*" android:scheme="file" android:pathPattern=".*\\.mp"/>  
-                <data android:host="*" android:scheme="file" android:pathPattern=".*\\.ms"/>  
+                <data android:host="*" android:scheme="file" android:pathPattern=".*\\.mdx" android:mimeType="audio/x-mdx"/>
+                <data android:host="*" android:scheme="file" android:pathPattern=".*\\.m*" android:mimeType="audio/x-pmd"/>
+                
+                <data android:host="*" android:scheme="file" android:pathPattern=".*\\.MDX" android:mimeType="audio/x-mdx"/>
+                <data android:host="*" android:scheme="file" android:pathPattern=".*\\.M*" android:mimeType="audio/x-pmd"/>
                 </intent-filter>
         </activity>
 

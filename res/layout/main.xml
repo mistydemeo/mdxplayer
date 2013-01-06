@@ -8,7 +8,7 @@
     <LinearLayout
         android:id="@+id/linearLayout1"
         android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="0dip"
         android:layout_weight="1"
         android:orientation="vertical" >
 
@@ -22,7 +22,7 @@
                 android:id="@+id/title_value"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="  "
+                android:text="@string/space_string"
                 android:textSize="25sp" >
             </TextView>
 
@@ -30,14 +30,14 @@
                 android:id="@+id/filename_value"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="  " >
+                android:text="@string/space_string" >
             </TextView>
 
             <TextView
                 android:id="@+id/volume_value"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text=" " >
+                android:text="@string/space_string" >
             </TextView>
         </LinearLayout>
 
@@ -46,7 +46,7 @@
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
             android:gravity="center"
-            android:text="00:00 / 05:00"
+            android:text="@string/timeinfo_string"
             android:textSize="40sp" >
         </TextView>
     </LinearLayout>
@@ -76,44 +76,46 @@
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom"
-            android:layout_weight="1"
             android:baselineAligned="false"
             android:orientation="horizontal" >
 
             <ImageButton
                 android:id="@+id/rev_btn"
-                android:layout_width="wrap_content"
+                android:layout_width="0dip"
                 android:layout_height="fill_parent"
-                android:layout_weight="1"
                 android:scaleType="fitCenter"
+	            android:layout_weight="1"
+                android:contentDescription="@string/rev_desc"
                 android:src="@drawable/rev" >
             </ImageButton>
 
             <ImageButton
                 android:id="@+id/stop_btn"
-                android:layout_width="wrap_content"
+                android:layout_width="0dip"
+                android:layout_weight="1"                
                 android:layout_height="fill_parent"
-                android:layout_weight="1"
                 android:scaleType="fitCenter"
+				android:contentDescription="@string/stop_desc"
                 android:src="@drawable/stop" >
             </ImageButton>
 
             <ImageButton
                 android:id="@+id/play_btn"
-                android:layout_width="wrap_content"
+                android:layout_width="0dip"
+                android:layout_weight="1"                
                 android:layout_height="fill_parent"
-                android:layout_weight="1"
                 android:scaleType="fitCenter"
+				android:contentDescription="@string/play_desc"                
                 android:src="@drawable/play" >
             </ImageButton>
 
             <ImageButton
                 android:id="@+id/ff_btn"
-                android:layout_width="wrap_content"
+                android:layout_width="0dip"
+                android:layout_weight="1"                
                 android:layout_height="fill_parent"
-                android:layout_weight="1"
-                android:adjustViewBounds="true"
                 android:scaleType="fitCenter"
+                android:contentDescription="@string/ff_desc"              
                 android:src="@drawable/ff" >
             </ImageButton>
         </LinearLayout>

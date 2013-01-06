@@ -240,6 +240,7 @@ public class Player extends Activity implements OnClickListener , NotifyBind
 	        {
 				PCMBound.doStop();
 
+				// ローカルファイルのみ開ける
 	        	File file = new File(getIntent().getData().getPath());
 	            fobj.openDirectory( file.getParent() );
 	            fobj.setCurrentFilePath( file.getPath() );
@@ -461,7 +462,7 @@ public class Player extends Activity implements OnClickListener , NotifyBind
     	// 現在の設定を保存する
     	savePref();
         pcmService.doUnbindService( this );
-		doCancelTimer();	    
+		doCancelTimer();
 		
 		super.onPause();
     }

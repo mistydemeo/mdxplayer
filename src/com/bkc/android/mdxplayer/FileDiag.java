@@ -172,7 +172,6 @@ public class FileDiag extends Activity implements OnClickListener, OnItemClickLi
     			else
     				data = String.format("%s Time:%02d:%02d", name , len / 60, len % 60  );
     		}
-    		
     		map.put("data" , data);
     		
     		items.add(map);           

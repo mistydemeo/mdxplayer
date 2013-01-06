@@ -1,13 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">MDXPLAYER for Android</string>
-    <string name="app_version">2012-06-10</string>
+    <string name="app_name">MDXPLAYER</string>
+    <string name="app_version">2013&#8211;01&#8211;06</string>
+
+    <string name="def_freq">32000</string>
+    <string name="def_buf">16</string>
     
+    
+    <string name="openerror">ファイルが開けませんでした \nファイル : %1$s</string>
     <string name="song_string">曲を開く</string>
     <string name="help_string">ヘルプ</string>
     <string name="key_string">キービューア</string>
     <string name="setting_string">設定</string>
-
+    <string name="explain_string">説明</string>
+    <string name="error_string">エラー</string>
+    
 
     <string name="buf_setting">バッファサイズ</string>
     <string name="buf_summary">バッファサイズの変更は次の曲から反映されます</string>
@@ -21,5 +28,24 @@
     <string name="pcm_summary">PCMのフォルダを設定します</string>
     <string name="share_string">共有</string>
     <string name="vol_string">音量</string>
+
+    <string name="choose_string">選択</string>
+   
+    <string name="folder_string">フォルダ:</string>
         
+	<string name="timeinfo_string">00:00 / 05:00</string>
+    
+	<string name="ok_string">OK</string>
+	<string name="space_string"></string>
+	
+	<string name="ff_desc">早送り</string>
+	<string name="rev_desc">巻き戻し</string>
+	<string name="stop_desc">停止</string>
+	<string name="play_desc">再生</string>
+	
+	<string name="note_info">o%1$d%2$s</string>
+	<string name="ch_info">CH%1$02d %2$s</string>
+	<string name="log_found">エラーログが見つかりました\n削除しますか？</string>
+	
+						
 </resources>

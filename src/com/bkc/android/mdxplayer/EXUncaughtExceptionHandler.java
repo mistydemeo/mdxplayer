@@ -87,7 +87,7 @@ public class EXUncaughtExceptionHandler implements UncaughtExceptionHandler
 		if (file != null & file.exists())
 		{
 			AlertDialog.Builder builder = new AlertDialog.Builder(ctx);
-			builder.setMessage("Error LOG found!!\nDo you want to remove the log?")
+			builder.setMessage(ctx.getString(R.string.log_found))
 			.setCancelable(false)
 			.setPositiveButton("Yes", new DialogInterface.OnClickListener()
 			{
