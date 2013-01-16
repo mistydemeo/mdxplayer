@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
       package="com.bkc.android.mdxplayer"
-      android:versionCode="9" android:versionName="@string/app_version">
+      android:versionCode="10" android:versionName="@string/app_version">
     <uses-sdk android:minSdkVersion="7" android:targetSdkVersion="7"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <supports-screens android:smallScreens="true" android:largeScreens="true" android:anyDensity="true" android:resizeable="true" android:normalScreens="true"/>
 
     <application android:icon="@drawable/icon" android:label="@string/app_name">
         <activity 

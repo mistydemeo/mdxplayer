@@ -4,10 +4,11 @@ import java.io.File;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import com.bkc.android.mdxplayer.R;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.PendingIntent;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
@@ -45,11 +46,19 @@ public class Player extends Activity implements OnClickListener , NotifyBind
 	static String KEY_LASTPATH = "lastPath";
 	static String KEY_VOLUME = "volume";
 
+	static String KEY_APPVER = "app_version";
+	static String KEY_LOGDATE = "log_date";
+
 	final Handler ui_handler = new Handler();
+	
+	private String app_version;
+	private long log_date = 0;
 	
 	private FileListObject fobj = null;
 	private PCMService pcmService = new PCMService();
 	private StringBuilder infoSB = new StringBuilder();
+	
+	private EXUncaughtExceptionHandler exHandler;
 	
 	// 初期化
     @Override
@@ -62,10 +71,10 @@ public class Player extends Activity implements OnClickListener , NotifyBind
         // タイトル作成
         MDXPlayerTitle = String.format("%s %s",res.getString(R.string.app_name),res.getString(R.string.app_version));
         
+        exHandler = new EXUncaughtExceptionHandler(this);
         
         // 例外ハンドラの設定        
-		Thread.setDefaultUncaughtExceptionHandler(
-				new EXUncaughtExceptionHandler(this));
+		Thread.setDefaultUncaughtExceptionHandler(exHandler);
 
         setContentView(R.layout.main);
         
@@ -87,8 +96,7 @@ public class Player extends Activity implements OnClickListener , NotifyBind
         seek_view  = (SeekBar)findViewById(R.id.seektime);
         
         ((TextView)findViewById(R.id.title_value)).setOnClickListener(this);
-        
-        
+
         time_view.setOnClickListener(this);    
   
         ((ImageButton)findViewById(R.id.play_btn)).setOnClickListener(this);
@@ -197,7 +205,6 @@ public class Player extends Activity implements OnClickListener , NotifyBind
 		);
 		
 		dialog.setCanceledOnTouchOutside( true );
-		
 	
 		// ダイアログ最大化
 		dialog.getWindow().setLayout(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT);
@@ -409,6 +416,33 @@ public class Player extends Activity implements OnClickListener , NotifyBind
 
     	vol_view.setText(sb); 
 	}
+
+	// 現在のアプリケーション設定を読み出す
+	public void loadAppPref()
+	{
+		SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
+        if (pref == null)
+        	return;
+        
+        app_version = pref.getString(KEY_APPVER, "");
+        log_date = pref.getLong(KEY_LOGDATE, 0);
+	}
+	
+	// 現在のアプリケーション設定を書き出す
+	public void saveAppPref()
+	{
+		SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
+        if (pref == null)
+        	return;
+        SharedPreferences.Editor edit = pref.edit();
+        if (edit == null)
+        	return;
+
+        edit.putString(KEY_APPVER,app_version);
+        edit.putLong(KEY_LOGDATE,log_date);
+        
+        edit.commit();
+	}
 	
 	// 現在の設定を読み出す
 	public void loadPref()
@@ -428,7 +462,6 @@ public class Player extends Activity implements OnClickListener , NotifyBind
         }
 	}
 
-
 	// 現在の設定を保存する
 	public void savePref()
 	{
@@ -437,7 +470,6 @@ public class Player extends Activity implements OnClickListener , NotifyBind
         	return;
         
         SharedPreferences.Editor edit = pref.edit();
-        
         if (edit == null)
         	return;
         
@@ -465,17 +497,80 @@ public class Player extends Activity implements OnClickListener , NotifyBind
 		doCancelTimer();
 		
 		super.onPause();
+    	saveAppPref();
     }
     
     @Override
     public void onResume()
     {
     	Log.d(TAG,"onResume");
- 
         // サービスへの接続
         pcmService.doBindService( this , new Intent(Player.this , PCMRender.class ) , this );
-
     	super.onResume();
+    	
+    	// エラーログの表示通知と最新バージョンの表示
+    	loadAppPref();
+    	
+    	long lastLogMod = exHandler.getLastModLog();
+    	
+    	// エラーログが更新されている
+    	if (lastLogMod != 0 && log_date != lastLogMod)
+    	{
+    		AlertDialog.Builder builder = new AlertDialog.Builder(this);
+     		
+    		builder.setMessage(R.string.log_found)
+    		.setCancelable(false)
+    		.setPositiveButton("OK", new DialogInterface.OnClickListener()
+    		{
+    				public void onClick(DialogInterface dialog,int id)
+    				{
+    					startHelpActivity();
+    				}
+    		})
+    		.setNegativeButton("Cancel", new DialogInterface.OnClickListener()
+    		{
+    				public void onClick(DialogInterface dialog,int id)
+    				{
+    					dialog.cancel();
+    				}
+    		});
+    		
+    		AlertDialog alert = builder.create();
+    		alert.show();
+    		
+    		log_date = lastLogMod;
+    	}
+    	
+    	// バージョン情報が更新されている
+    	String app_current_ver = getString(R.string.app_version);
+    	
+    	if (!app_current_ver.equals(app_version))
+    	{
+    		AlertDialog.Builder builder = new AlertDialog.Builder(this);
+    		
+    		StringBuilder sb = new StringBuilder();		
+    		sb.setLength(0);
+    		sb.append(getString(R.string.app_name)).append(" ")
+    		.append(getString(R.string.app_version)).append("\n")
+    		.append(getString(R.string.latest_info));
+    		
+    		builder.setMessage(sb)
+    		.setCancelable(false)
+    		.setPositiveButton("OK", new DialogInterface.OnClickListener()
+    		{
+    				public void onClick(DialogInterface dialog,int id)
+    				{
+    					dialog.cancel();
+    				}
+    		});
+    		
+    		AlertDialog alert = builder.create();
+    		alert.show();
+    		
+    		app_version = app_current_ver; 		
+    	}
+    	
+    	saveAppPref();
     }
     @Override
     public void onStart()
@@ -542,7 +637,7 @@ public class Player extends Activity implements OnClickListener , NotifyBind
 		break;
 		case R.id.rev_btn:
 			PCMBound.doPlayPrevSong();
-			updateInfo();
+			PCMBound.doUpdate();
 			break;
 		case R.id.ff_btn:
 			PCMBound.doPlayNextSong();
@@ -550,7 +645,7 @@ public class Player extends Activity implements OnClickListener , NotifyBind
 			break;
 		case R.id.time_value:
 			PCMBound.doSetLoop();
-			updateInfo();
+			PCMBound.doUpdate();
 			break;
 		case R.id.title_value:
 			openSongSelector();
@@ -564,7 +659,7 @@ public class Player extends Activity implements OnClickListener , NotifyBind
 		// ファイルダイアログ処理
 		if (reqCode == 0)
 		{
-			if ( result == RESULT_OK )	
+			if ( PCMBound != null && result == RESULT_OK )	
 			{			
 				savePref();
 				

@@ -22,7 +22,6 @@
 #define MODE_NONE 0
 #define MODE_MDX 1
 #define MODE_PMD 2
-
 #define MAX_SIZE 256
 
 

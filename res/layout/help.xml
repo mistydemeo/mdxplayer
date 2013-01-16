@@ -61,8 +61,23 @@
             android:layout_height="fill_parent"
             android:layout_gravity="bottom"
             android:layout_weight="1"
-            android:text="@string/ok_string" >
-        </Button>
+            android:text="@string/ok_string" />
+        
+        <Button
+            android:id="@+id/send_log"
+            android:layout_width="0dip"
+            android:layout_height="fill_parent"
+            android:layout_weight="1"
+            android:text="@string/send_string" />
+
+        <Button
+            android:id="@+id/delete_log"
+            android:layout_width="0dip"
+            android:layout_height="fill_parent"
+            android:layout_weight="1"
+            android:text="@string/delete_string" />
+        
+                
     </LinearLayout>
 
 </LinearLayout>

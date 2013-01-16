@@ -33,6 +33,8 @@ public class KeyView extends Activity implements NotifyBind
 	
 	int volume = 0;
 	int pcmrate = 0;
+	
+	boolean drawFlag = false;
 
 	class KeySurfaceView extends SurfaceView implements SurfaceHolder.Callback,Runnable
 	{
@@ -62,6 +64,7 @@ public class KeyView extends Activity implements NotifyBind
 
 		int key_w = 42;
 		int key_h = 16;
+		
 		int white_w = 6;
 		int white_h = 16;
 		int black_w = (int)4.5;
@@ -78,7 +81,7 @@ public class KeyView extends Activity implements NotifyBind
 		
 		private long lastTime = 0;
 		private long delayMS = 15;
-				
+						
 		// コンストラクタ
 		public KeySurfaceView(Context context , SurfaceView sv)
 		{
@@ -121,7 +124,8 @@ public class KeyView extends Activity implements NotifyBind
 			
 			while(thread != null)
 			{
-				drawKey();
+				if (drawFlag)
+					drawKey();
 			}
 		}
 		
@@ -143,7 +147,6 @@ public class KeyView extends Activity implements NotifyBind
 		{
 			canvas.drawBitmap(bitmap, x, y, paint);
 		}
-		
 
 		private void drawKeyRect( Canvas canvas , int x , int y , int note )
 		{
@@ -252,10 +255,8 @@ public class KeyView extends Activity implements NotifyBind
 			paint.setAntiAlias( false );
 			paint.setColor( colorFont );
 			paint.setTextSize( 20 );
-			
-			
-			clearCanvas();
 
+			clearCanvas();
 		}
 
 		Paint paint = new Paint();
@@ -270,8 +271,7 @@ public class KeyView extends Activity implements NotifyBind
 			SurfaceHolder holder = psv.getHolder();
 			Canvas canvas = holder.lockCanvas();
 
-			// TODO: sometimes thread calls drawKey before create surface.
-			draw_h = canvas.getHeight();	
+			draw_h = canvas.getHeight();
 
 			clearLine( canvas, 0 , line_step * 2 ); 
 			
@@ -372,6 +372,9 @@ public class KeyView extends Activity implements NotifyBind
 		
 		Resources r = this.getResources();
 		
+		// クラッシュテスト用コード
+		// int h = whiteBitmap.getHeight();
+		
 		whiteBitmap = 
 			BitmapFactory.decodeResource(
 					r, R.drawable.kbd_white_42x16 );
@@ -380,6 +383,12 @@ public class KeyView extends Activity implements NotifyBind
 			BitmapFactory.decodeResource(
 					r , R.drawable.kbd_black_42x16 );
 		
+		Log.d(TAG , 
+				String.format("blackBitmap w:%d h:%d",
+						blackBitmap.getWidth(),
+						blackBitmap.getHeight()
+						));
+	
 		whiteBitmap.prepareToDraw();
 		blackBitmap.prepareToDraw();
 	}
@@ -447,22 +456,31 @@ public class KeyView extends Activity implements NotifyBind
         super.onCreate(savedInstanceState);
         
         loadBitmap();
-        setContentView(R.layout.keyview);
-        
-        SurfaceView sv = (SurfaceView)findViewById( R.id.sv1 );
-        
-        new KeySurfaceView(this , sv);
-        
-        pcmService.doBindService( this , new Intent( KeyView.this , PCMRender.class ) , this );
-        
-        getScreenSize();
     	Log.d(TAG,"onCreate");
     }
     
     @Override
+	protected void onResume() 
+    {
+    	setContentView(R.layout.keyview);
+        
+        SurfaceView sv = (SurfaceView)findViewById( R.id.sv1 );
+        new KeySurfaceView(this , sv);
+        pcmService.doBindService( this , new Intent( KeyView.this , PCMRender.class ) , this );
+        
+        getScreenSize();
+
+		super.onResume();
+		
+		drawFlag = true;
+	}
+
+	@Override
     public void onPause()
     {
     	Log.d(TAG,"onPause");
+    	drawFlag = false;
+    	
 		pcmService.doUnbindService( this );
 		super.onPause();
     }
