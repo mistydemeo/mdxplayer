@@ -27,7 +27,7 @@
         <PreferenceScreen
             android:key="pcm_key"
             android:summary="@string/pcm_summary"
-            android:title="@string/pcm_name" >
+            android:title="@string/pcm_string" >
 
             <intent
                 android:action="android.intent.action.MAIN"

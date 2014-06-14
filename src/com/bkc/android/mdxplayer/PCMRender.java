@@ -25,7 +25,6 @@ import android.media.AudioTrack;
 import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
-import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.Toast;
@@ -48,7 +47,7 @@ public class PCMRender extends Service
 	private native int     sdrv_get_note(int[] data,int len);
 	
 	
-	private String TAG = "PCMRender";
+	private final static String TAG = "PCMRender";
 
 	FileListObject fobj = null;
 	
@@ -64,7 +63,8 @@ public class PCMRender extends Service
 	private boolean isLoadFile = false;
 	private boolean isLoadedFile = false;
 	
-	private boolean isUpdating = false;
+	static private boolean isUpdating = false;
+	
 	private boolean isPlayedOnce = false;
 	private boolean isStopping = false;
 
@@ -93,9 +93,7 @@ public class PCMRender extends Service
 		super.onCreate();
 
 		Log.d(TAG, "onCreate");
-		
 		handler = new Handler();
-		
 		notifMan = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
 	
 		startPCMdriver();
@@ -106,12 +104,9 @@ public class PCMRender extends Service
     public void onDestroy()
     {
 		Log.d(TAG,"onDestroy");
+
+		closeFile();
 		
-        if ( isPlaying )
-        {
-            isPlaying = false;
-        	sdrv_close();
-        }
         c_runner.stop_flag = true;        
     	super.onDestroy();
     }
@@ -169,6 +164,18 @@ public class PCMRender extends Service
 	{
 		cbIntent = intent;
 	}
+	
+    // ファイルを閉じる
+    private void closeFile()
+    {
+    	if ( isPlaying )
+    	{
+        	Log.d(TAG, "closeFile");
+    		isPlaying = false;
+    		sdrv_close();
+    	}
+    }
+
 
 	// 曲の再生を開始する
     public void doPlaySong()
@@ -183,12 +190,15 @@ public class PCMRender extends Service
     	isLoadFile = true;
     	isPlayedOnce = true;
     	isLoadedFile = false;
+    	isStopping = false;
+
     }
     
     // 曲を停止
     public void doStop()
     {
-    	// 通知
+    	Log.d(TAG,"doStop");
+    	// 通知のキャンセル
     	notifMan.cancel( R.string.app_name );
     	
     	
@@ -349,8 +359,8 @@ public class PCMRender extends Service
     // 曲名の設定
     public void setTitle(String title)
     {
-    	isUpdating = true;
     	song_title = title;
+    	isUpdating = true;
     }
     
     // 更新の確認
@@ -391,6 +401,7 @@ public class PCMRender extends Service
     // PCM再生スレッドの作成
     private void startPCMdriver()
     {
+    	Log.d(TAG,"startPCMdriver");
     	sdrv_setpcmdir("");
     	
     	// オーディオスレッド
@@ -424,7 +435,7 @@ public class PCMRender extends Service
             	int rate = atRate;
             	
             	int ch_bit = AudioFormat.ENCODING_PCM_16BIT;
-            	int ch_out = AudioFormat.CHANNEL_CONFIGURATION_STEREO;
+            	int ch_out = AudioFormat.CHANNEL_OUT_STEREO;
             	// int ch_out = AudioFormat.CHANNEL_OUT_STEREO; later 2.0
             	
             	if (at != null)
@@ -526,45 +537,34 @@ public class PCMRender extends Service
             	return at.getPlaybackHeadPosition();
             }
         	
-            // ファイルを閉じる
-            private void closeFile()
-            {
-            	if ( isPlaying )
-            	{
-            		isPlaying = false;
-            		sdrv_close();
-            	}
-            }
             
             //　ファイルを読み込む
             private void loadFile()
             {
             	// 再生中なら一旦閉じる
-            	if ( isPlaying )
-            	{
-            		isPlaying = false;
-            		sdrv_close();
-            	}
+
+            	closeFile();
+            	
             	SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(PCMRender.this);
             	
             	if (sp != null)
             	{
-            		song_pcmpath = sp.getString( Player.KEY_PCMPATH, "" );
+            		song_pcmpath = sp.getString( Setting.PCMPATH, "" );
             		sdrv_setpcmdir( song_pcmpath );
             	}
 
             	// ファイルチェック
-            	File file = new File( fobj.path );
+            	File file = new File( fobj.current_filepath );
 
             	// 存在しない or 開けない
-            	if ( !file.exists() || sdrv_open ( fobj.path ) )            	
+            	if ( !file.exists() || sdrv_open ( fobj.current_filepath ) )            	
             	{
             		handler.post(new Runnable()
             		{
             			@Override
             			public void run() 
             			{
-            				String msg = getString(R.string.openerror, fobj.path);
+            				String msg = getString(R.string.openerror, fobj.current_filepath);
             				Toast.makeText(PCMRender.this, msg, Toast.LENGTH_LONG ).show();
             			}
             		});
@@ -572,16 +572,22 @@ public class PCMRender extends Service
             		return;
             	}
             	
-            	// タイトル＆長さ取得
+            	// タイトル＆曲の時間を取得
             	song_title = getMDXTitle();
             	song_pos = 0;
             	song_len = sdrv_length();
+
+            	// song_len = 10; // for debug
+            	
+            	// Log.d(TAG, song_title + " length = " + song_title.length());
+            	if (song_title.length() == 0)
+            		song_title = file.getName();
             	
             	// 通知
-            	setNotif( song_title );
+            	setNotif(song_title);
             	
-            	fobj.setCurrentSongTitle( song_title );
-            	fobj.setCurrentSongLen( song_len );
+            	fobj.setCurrentSongTitle(song_title);
+            	fobj.setCurrentSongLen(song_len);
             
             	isUpdating = true;
                 isPlaying = true;
@@ -590,6 +596,9 @@ public class PCMRender extends Service
                 isLoadedFile = true;
                 
                 song_count ++;
+                
+                Log.d(TAG,"start play " + song_count + " id:" + c_runner.getId());
+                Log.d(TAG,"id:" + this.hashCode() + " playing:" + isPlaying);
             }
 
         	// タイトル取得
@@ -597,6 +606,9 @@ public class PCMRender extends Service
             {
         		String title = "";
         		try {
+        			// note : sdrv_title returned without null termination.
+        			// String makes "len = 1" string if it has null term.
+        			
         			title = new String(sdrv_title(),"SJIS");
         		} catch (UnsupportedEncodingException e)
         		{
@@ -616,12 +628,14 @@ public class PCMRender extends Service
                 // サイズが大きいとUIフリーズバグが発生する
                 int atPackSize = 2048;
                 
-                long lastTime = SystemClock.uptimeMillis();
-                long diffTime = 0;
+                // long lastTime = SystemClock.uptimeMillis();
+                // long diffTime = 0;
                 
                 long oldPos = 0;                
         		int[] notes = new int[64];
 
+        		Log.d(TAG, "run id:" + c_runner.getId());
+        		Log.d(TAG, "id:" + this.hashCode());
                 
                 stop_flag = false;
                                 
@@ -632,6 +646,8 @@ public class PCMRender extends Service
 
                 	if ( isLoadFile )
                 	{
+                        Log.d(TAG,"loadFile id:" + c_runner.getId());
+
                 		// ファイルの再生準備
         				audioSetConfig();
         				
@@ -664,7 +680,7 @@ public class PCMRender extends Service
                 			sleep(100);
                 		} catch (InterruptedException e) {}
                 		oldPos = audioCurrentPos();
-                		lastTime = SystemClock.uptimeMillis();
+                		// lastTime = SystemClock.uptimeMillis();
                 		continue;
                 	}
 
@@ -673,9 +689,8 @@ public class PCMRender extends Service
 
                 	if ( isPlaying && at != null )
                 	{
-                		// TODO : leaked!!
-                		sdrv_render( atPCM , atPackSize / 2 );
-                		int bufsize = at.write( atPCM , 0 , atPackSize ); 
+                		sdrv_render(atPCM, atPackSize / 2);
+                		int bufsize = at.write(atPCM, 0, atPackSize);
 
                 		// バッファ位置への加算
                 		atBufPos += bufsize;
@@ -689,7 +704,8 @@ public class PCMRender extends Service
                     		int len = getTracks();
                     		Integer[] notes_obj = new Integer[64];
                     		
-                    		sdrv_get_note( notes, len );
+                    		sdrv_get_note(notes, len);
+                    		
                 			// 非効率変換...
                 			for ( int i = 0; i < len; i++ )
                 			{
@@ -703,6 +719,7 @@ public class PCMRender extends Service
                 		// バッファが満たされたら再生開始  		
                 		if (!atPlay && atBufPos >= atMinBuf)
                 		{
+                            Log.d(TAG,"at.play");
                 			atPlay = true;
                 			at.play();
                 		}
@@ -714,9 +731,9 @@ public class PCMRender extends Service
                 		oldPos = curPos;
                 	}
 
-                	long currTime = SystemClock.uptimeMillis();
-                	diffTime += ( currTime - lastTime );
-                	lastTime = currTime;
+                	// long currTime = SystemClock.uptimeMillis();
+                	// diffTime += ( currTime - lastTime );
+                	// lastTime = currTime;
 
                 	// 再生ポジションがある程度進んだら情報更新
                 	
@@ -727,8 +744,6 @@ public class PCMRender extends Service
                 		// 無限ループでなければフェイドアウトを実行
                 		if ( !song_loop_inf && song_pos > (song_len - 3) )
                 			sdrv_dofade( 3 );
-
-                		isUpdating = true;
                 		
                 		if ( song_loop_inf || song_pos < song_len )
                 		{
@@ -752,6 +767,7 @@ public class PCMRender extends Service
 //                Log.d("thread","finished");        		
         	}
         };   
-    	new Thread( c_runner ).start();
+        
+        c_runner.start();
     }
 }

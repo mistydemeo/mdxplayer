@@ -30,6 +30,9 @@
         android:id="@+id/menuItem06"
         android:title="@string/vol_string"></item>
     
+    <item
+        android:id="@+id/menu_showInfo"
+        android:title="@string/changelog_string"></item>
     
     
 </menu>

@@ -1,35 +1,73 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-      package="com.bkc.android.mdxplayer"
-      android:versionCode="10" android:versionName="@string/app_version">
-    <uses-sdk android:minSdkVersion="7" android:targetSdkVersion="7"/>
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
-    <supports-screens android:smallScreens="true" android:largeScreens="true" android:anyDensity="true" android:resizeable="true" android:normalScreens="true"/>
+    package="com.bkc.android.mdxplayer"
+    android:versionCode="11"
+    android:versionName="@string/app_version" >
 
-    <application android:icon="@drawable/icon" android:label="@string/app_name">
-        <activity 
-        	android:name="Player" android:label="@string/app_name" android:screenOrientation="unspecified" android:configChanges="keyboardHidden|orientation">
-        	<intent-filter>
+    <uses-sdk
+        android:minSdkVersion="8"
+        android:targetSdkVersion="14" />
+
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+
+
+    <application
+        android:icon="@drawable/icon"
+        android:label="@string/app_label"
+        android:theme="@style/AppTheme">
+        <activity
+            android:name="Player"
+            android:configChanges="keyboardHidden|orientation"
+            android:label="@string/app_label"
+            android:screenOrientation="unspecified" android:launchMode="singleTop">
+            <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
             <intent-filter>
-                <action android:name="android.intent.action.VIEW"/>
+                <action android:name="android.intent.action.VIEW" />
+
                 <category android:name="android.intent.category.DEFAULT" />
-                <data android:host="*" android:scheme="file" android:pathPattern=".*\\.mdx" android:mimeType="audio/x-mdx"/>
-                <data android:host="*" android:scheme="file" android:pathPattern=".*\\.m*" android:mimeType="audio/x-pmd"/>
-                
-                <data android:host="*" android:scheme="file" android:pathPattern=".*\\.MDX" android:mimeType="audio/x-mdx"/>
-                <data android:host="*" android:scheme="file" android:pathPattern=".*\\.M*" android:mimeType="audio/x-pmd"/>
-                </intent-filter>
+
+                <data
+                    android:host="*"
+                    android:mimeType="audio/x-mdx"
+                    android:pathPattern=".*\\.mdx"
+                    android:scheme="file" />
+                <data
+                    android:host="*"
+                    android:mimeType="audio/x-pmd"
+                    android:pathPattern=".*\\.m*"
+                    android:scheme="file" />
+                <data
+                    android:host="*"
+                    android:mimeType="audio/x-mdx"
+                    android:pathPattern=".*\\.MDX"
+                    android:scheme="file" />
+                <data
+                    android:host="*"
+                    android:mimeType="audio/x-pmd"
+                    android:pathPattern=".*\\.M*"
+                    android:scheme="file" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name="FileDiag"
+            android:configChanges="keyboardHidden|orientation"
+            android:screenOrientation="unspecified" >
+        </activity>
+        <activity android:name="HelpActivity" >
         </activity>
 
-        <activity android:name="FileDiag" android:screenOrientation="unspecified" android:configChanges="keyboardHidden|orientation">
+        <service android:name="PCMRender" >
+        </service>
+
+        <activity android:name="KeyView" >
         </activity>
-        <activity android:name="HelpActivity"></activity>
-        <service android:name="PCMRender"></service>
-        <activity android:name="KeyView"></activity>
-        <activity android:name="Setting"></activity>
-        
+        <activity android:name="Setting" >
+        </activity>
     </application>
+
 </manifest>

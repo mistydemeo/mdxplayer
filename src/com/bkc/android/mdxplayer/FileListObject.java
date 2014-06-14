@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 
 import android.content.Context;
 import android.database.Cursor;
@@ -22,11 +23,12 @@ public class FileListObject
 	private HashMap<String,Integer> files_len;
 	
 	// 現在の位置
-	public int position;
-	public String current_path;
-	public String path;
+	public int position = 0;
+	public String current_dir = null;
+	public String current_filepath = null;
 	
 	SongDBHelper songHelper;
+	// private static final String TAG = "FileListObject";
 	
 	private static FileListObject inst = new FileListObject();
 
@@ -39,8 +41,8 @@ public class FileListObject
     	files_title = new HashMap<String,String>();
     	files_len = new HashMap<String,Integer>();
     	
-    	current_path = "";
-    	path = "";
+    	current_dir = "";
+    	current_filepath = "";
 	}
 	
 	public static FileListObject getInst()
@@ -78,9 +80,8 @@ public class FileListObject
     	{
     		public boolean accept(File file)
     		{
-    			String fname = file.getName().toLowerCase();
+    			String fname = (file.getName()).toLowerCase(Locale.ENGLISH);
     			
-    			// 不可視ファイルと判断
     			if (fname.startsWith("."))
     				return false;
 
@@ -161,15 +162,7 @@ public class FileListObject
     	   	
         for (File f : files)
         {
-        	if ( !f.isDirectory() )
-        	{
-        		// afiles_name.add(getMDXTitleFromFile(f.getAbsolutePath()));
         		afiles_name.add(f.getName());    	
-        	}
-        	else
-        	{
-        		afiles_name.add("<" + f.getName() + ">");      	
-        	}
         }
         return 0;
      }
@@ -184,6 +177,9 @@ public class FileListObject
     		return;
     	
     	SQLiteDatabase db = songHelper.getWritableDatabase();
+    	
+    	songHelper.startTransaction(db);
+    	songHelper.deleteFilesInDir(db, path);
     	
     	for (int i = 0; i < afiles.size(); i++)
     	{
@@ -201,11 +197,17 @@ public class FileListObject
     			title = new String("");
     		
     		if (len == null)
-    			len = new Integer(0);
+    			len = Integer.valueOf(0);
     		    		
-    		songHelper.replace(db, dir , name , title, len );
+    		songHelper.insert(db,
+    				dir,
+    				name,
+    				title,
+    				len);
     		
     	}
+    	
+    	songHelper.endTransaction(db);
     	db.close();
     }
     // 読み出し
@@ -219,8 +221,11 @@ public class FileListObject
     		return;
     		
      	SQLiteDatabase db = songHelper.getReadableDatabase();
-     	Cursor c = db.query( songHelper.getTableName() , songHelper.getSelection(), where, select, null, null,
-                null);
+     	Cursor c = db.query( 
+     			songHelper.getTableName(),
+     			songHelper.getSelection(), 
+     			where, select, null, null, null);
+     	
         c.moveToFirst();
 
         for (int i = 0; i < c.getCount(); i++) 
@@ -230,10 +235,10 @@ public class FileListObject
             int len = c.getInt(3);
             
             if (title.length() > 0)
-            	files_title.put( name , title );
+            	files_title.put(name, title);
             
-            if ( len > 0 )
-            	files_len.put( name , len );
+            if (len > 0)
+            	files_len.put(name, len);
             
             c.moveToNext();
         }
@@ -246,21 +251,21 @@ public class FileListObject
     public int openDirectory( String path )
     {
     	// データベースの更新
-    	updateDatabase( current_path );
+    	updateDatabase( current_dir );
     	
-    	if ( path.contentEquals( current_path ) )
+    	if ( path.contentEquals( current_dir ) )
     		return 0;
     	
        	if ( readDirectory( path ) < 0 )
        	{
-       		current_path = "";
+       		current_dir = "";
        		return -1;
        	}
        	
        	// データベースの取得
        	readDatabase( path );
        	
-        current_path = path;
+        current_dir = path;
         
         return 0;
     }
@@ -279,10 +284,10 @@ public class FileListObject
 	}
 	
 	// 現在のファイルをセットする
-	public void setCurrentFilePath ( String filepath )
+	public void setCurrentFilePath(String filepath)
 	{
 		position = getSongPosFromPath ( filepath );
-		path = filepath;
+		current_filepath = filepath;
 	}
 	
 	// 現在の曲のタイトルをセットする
@@ -318,10 +323,11 @@ public class FileListObject
 	//  次の曲を探す
     public void getNextSong(int step)
     {        
+    	// Log.d(TAG, "next pos=" + position + " hash:" + this.hashCode());
     	int pos = position;
     	
     	if (pos < 0 || pos >= afiles.size())
-    		pos = getSongPosFromPath(path);
+    		pos = getSongPosFromPath(current_filepath);
 
     	for (int i = 0; i < afiles.size(); i++)
     	{
@@ -339,12 +345,10 @@ public class FileListObject
     		}
     		if (!afiles.get(pos).isDirectory())
     		{
-    			path = afiles.get(pos).getAbsolutePath();
+    			current_filepath = afiles.get(pos).getAbsolutePath();
     			break;
     		}
     	}
-    	
     	position = pos;
     }
-	
 }

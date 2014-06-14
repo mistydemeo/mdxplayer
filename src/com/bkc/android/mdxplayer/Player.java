@@ -1,9 +1,8 @@
 package com.bkc.android.mdxplayer;
 
 import java.io.File;
-import java.util.Timer;
-import java.util.TimerTask;
-
+import java.io.IOException;
+import java.io.InputStream;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -12,6 +11,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
@@ -30,29 +30,25 @@ import android.widget.SeekBar;
 public class Player extends Activity implements OnClickListener , NotifyBind
 {
 	// UI関連
-	TextView time_view;
-	TextView title_view;
-	TextView file_view;
-	TextView vol_view;
-	SeekBar  seek_view;
-	
+	static TextView time_view;
+	static TextView title_view;
+	static TextView file_view;
+	static TextView vol_view;
+	static SeekBar  seek_view;
+
+	private String app_title;
+	private String app_version;
+
 	private boolean isStartService = false;
 
-	String TAG = "MDXPlayer";
-	String MDXPlayerTitle;
-
-	static String KEY_PCMPATH  = "PCMPath";   
-	static String KEY_LASTFILE = "lastFile";
-	static String KEY_LASTPATH = "lastPath";
-	static String KEY_VOLUME = "volume";
-
-	static String KEY_APPVER = "app_version";
-	static String KEY_LOGDATE = "log_date";
+	private final static String TAG = "Player";
+	private static final int REQ_FILE = 0;
 
 	final Handler ui_handler = new Handler();
 	
-	private String app_version;
 	private long log_date = 0;
+	static boolean pauseDiag = false;
+
 	
 	private FileListObject fobj = null;
 	private PCMService pcmService = new PCMService();
@@ -69,7 +65,7 @@ public class Player extends Activity implements OnClickListener , NotifyBind
         Resources res = getResources();
         
         // タイトル作成
-        MDXPlayerTitle = String.format("%s %s",res.getString(R.string.app_name),res.getString(R.string.app_version));
+        app_title = String.format("%s %s",res.getString(R.string.app_name),res.getString(R.string.app_version));
         
         exHandler = new EXUncaughtExceptionHandler(this);
         
@@ -96,6 +92,7 @@ public class Player extends Activity implements OnClickListener , NotifyBind
         seek_view  = (SeekBar)findViewById(R.id.seektime);
         
         ((TextView)findViewById(R.id.title_value)).setOnClickListener(this);
+        ((TextView)findViewById(R.id.filename_value)).setOnClickListener(this);
 
         time_view.setOnClickListener(this);    
   
@@ -139,6 +136,10 @@ public class Player extends Activity implements OnClickListener , NotifyBind
 				// volume
 				startVolumeDialog();
 			return true;
+			case R.id.menu_showInfo:
+	    		dispInfoDiag();
+	    	break;
+
 		}
 		return false;
 	}
@@ -158,7 +159,7 @@ public class Player extends Activity implements OnClickListener , NotifyBind
 		}
 		else
 		{
-			content = String.format("Starting Up: %s #mdxplayer",MDXPlayerTitle );
+			content = String.format("Starting Up: %s #mdxplayer",app_title );
 		}
 		
 		intent.putExtra( Intent.EXTRA_TEXT, content );
@@ -207,11 +208,66 @@ public class Player extends Activity implements OnClickListener , NotifyBind
 		dialog.setCanceledOnTouchOutside( true );
 	
 		// ダイアログ最大化
-		dialog.getWindow().setLayout(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT);
+		dialog.getWindow().setLayout(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
 		dialog.show();
 
 	}
+	
+    void doCheckIntent()
+    {
+    	if (PCMBound == null)
+    		return;
+    	
+		String action = getIntent().getAction();
+		
+		if (action == null)
+			return;
+		
+    	Log.d(TAG,"action:" + action);
 
+    	Uri uri = getIntent().getData();
+
+		if (Intent.ACTION_VIEW.equals(action) && uri != null)
+		{
+			String URI = uri.toString();
+			
+			Log.d(TAG,"scheme:" + uri.getScheme() + " string:" + URI);
+					
+			if (fobj != null)
+			{
+				Log.d(TAG,"doIntent:");
+				getIntent().setAction("");
+				
+				doPlayFile(getIntent().getData().getPath());
+			}
+		}
+    }
+	
+    @Override
+    protected void onNewIntent(Intent intent) 
+    {
+    	Log.d(TAG,"onNewIntent");
+    	
+    	super.onNewIntent(intent);
+    	setIntent(intent);
+    	doCheckIntent();
+    }
+
+	// ファイルオブジェクトの設定
+	private void setFileObject()
+	{
+        fobj = PCMBound.getFobj();
+        
+        // ファイルオブジェクトを新たに作成
+        if (fobj == null)
+        {
+            fobj = FileListObject.getInst();
+            fobj.setContext(getApplicationContext());
+        	PCMBound.setFobj(fobj);
+        	PCMBound.setTitle(app_title);
+        }
+	}
+    
 	// 接続通知
 	public void notifyConnected( PCMRender pcm )
     {
@@ -230,41 +286,60 @@ public class Player extends Activity implements OnClickListener , NotifyBind
 		
 		PCMBound.setCallbackIntent( cbIntent );
 		
-        if ( PCMBound.isPlayed() )
-        {
-        	fobj = PCMBound.getFobj();
-        }
-        else
-        {
-        	PCMBound.setFobj( fobj );
-        	loadPref();
-        	PCMBound.setTitle( MDXPlayerTitle );
-        }
+		setFileObject();
+		doCheckIntent();
+		
+        doStartUIThread();
 
-		if (Intent.ACTION_VIEW.equals(getIntent().getAction()))
-		{
-	        if ( fobj != null )
-	        {
-				PCMBound.doStop();
-
-				// ローカルファイルのみ開ける
-	        	File file = new File(getIntent().getData().getPath());
-	            fobj.openDirectory( file.getParent() );
-	            fobj.setCurrentFilePath( file.getPath() );
-				PCMBound.doPlaySong();
-	        }
-		}
-        
     	PCMBound.doUpdate();
-        doScheduleUpdateTimer();
+
+    	checkFileDiag();
+
+    	loadPref();
+
     }
     
-	// 切断通知
+	private void checkFileDiag() {
+		if (returnFileDiag)
+		{
+			returnFileDiag = false;
+			
+			if (isSongRequest)
+			{
+				isSongRequest = false;
+				loadRequestSong();
+			}
+			
+			if (pauseDiag)
+				PCMBound.doSetPause(false);
+		}		
+	}
+
+	private void loadRequestSong() 
+	{
+		doPlayFile(fobj.current_filepath);		
+	}
+
+	private void doPlayFile(String path) 
+	{
+		PCMBound.doStop();
+
+    	File file = new File(path);
+        fobj.openDirectory(file.getParent());
+        fobj.setCurrentFilePath(file.getPath());
+        
+        PCMBound.setFobj(fobj);
+        
+		PCMBound.doPlaySong();
+		
+		PCMBound.doUpdate();
+	}
+
+	// 切断通知(基本的に呼ばれない)
     public void notifyDisconnected()
     {
     	PCMBound = null;
 		Log.d(TAG,"notifyDisconnected");
-		doCancelTimer();	
     }
    
     // 終了処理
@@ -298,7 +373,7 @@ public class Player extends Activity implements OnClickListener , NotifyBind
     
     ////////////////////////////////////////
     // サービス関連
-	private PCMRender PCMBound = null;	
+	static private PCMRender PCMBound = null;	
     
     // サービスの開始
     private void doStartService()
@@ -326,42 +401,58 @@ public class Player extends Activity implements OnClickListener , NotifyBind
 
     //////////////////////////////////////
     // 画面関連
-    private Timer DispTimer = null;
+    private boolean uiLoop = false;
+    private Thread uiThread = null;
+    
+    private boolean isSongRequest = false;
+	private boolean returnFileDiag = false;
+	private long uiID = 0;
        
-    private void doScheduleUpdateTimer()
+    private void doStartUIThread()
     {
-    	TimerTask uiTask = new TimerTask() 
+    	if (uiLoop)
+    		return;
+    	
+    	uiLoop = true;
+    	uiThread = new Thread() 
     	{
     		@Override
     		public void run()
     		{
-        		ui_handler.post(new Runnable()
-        		{
-        			@Override
-        			public void run() 
-        			{
-        				updateInfo();
-        			}
-        		});
+				while (uiLoop) {
+					ui_handler.post(new Runnable() {
+						@Override
+						public void run() {
+							updateInfo();
+						}
+					});
+					try {
+						Thread.sleep(25);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+    			}
     		}
     	};
     	
-		Log.d(TAG,"Scheduling timer..");
-    	DispTimer = new Timer(true);
-    	DispTimer.scheduleAtFixedRate(uiTask,0,200);    	
+    	uiID = uiThread.getId();
+		Log.d(TAG,"start UI.. id:" + uiID);
+		uiThread.start();
     }
     
     // タイマーのキャンセル
-    private void doCancelTimer()
+    private void doStopUIThread()
     {
-		Log.d(TAG,"Cancelled timer..");
-    	if ( DispTimer == null )
+		Log.d(TAG,"stop UI.. id:" + uiID);
+    	if (uiThread == null)
     		return;
-
-    	DispTimer.cancel();
-    	DispTimer = null;
     	
-    	Log.d(TAG,"Cancelled");
+    	uiLoop = false;
+    	while(uiThread.isAlive());
+    	
+    	uiThread = null;
+    	
+    	Log.d(TAG,"stopped UI id:" + uiID);
     }
     
     // 画面表示
@@ -395,19 +486,24 @@ public class Player extends Activity implements OnClickListener , NotifyBind
     // 情報更新
 	private void updateInfo()
 	{
-		
-		if ( !PCMBound.isUpdate() )
+		if (PCMBound == null)
 			return;
 		
 		updateTime();
+
+		// 時間情報以外
+		if ( !PCMBound.isUpdate() )
+			return;
+		
 		
 		if ( PCMBound.isPlay() && !PCMBound.getPause() )
-			((ImageButton)findViewById(R.id.play_btn)).setImageResource( R.drawable.pause );
+			((ImageButton)findViewById(R.id.play_btn)).setImageResource(R.drawable.pause
+);
 		else
-			((ImageButton)findViewById(R.id.play_btn)).setImageResource( R.drawable.play );
+			((ImageButton)findViewById(R.id.play_btn)).setImageResource(R.drawable.play);
 			   	
         title_view.setText( PCMBound.getTitle() );
-        file_view.setText( fobj.path );
+        file_view.setText( fobj.current_filepath );
         
         StringBuilder sb = new StringBuilder();
         sb.setLength(0);
@@ -424,8 +520,8 @@ public class Player extends Activity implements OnClickListener , NotifyBind
         if (pref == null)
         	return;
         
-        app_version = pref.getString(KEY_APPVER, "");
-        log_date = pref.getLong(KEY_LOGDATE, 0);
+        app_version = pref.getString(Setting.APPVER, "");
+        log_date = pref.getLong(Setting.LOGDATE, 0);
 	}
 	
 	// 現在のアプリケーション設定を書き出す
@@ -438,8 +534,8 @@ public class Player extends Activity implements OnClickListener , NotifyBind
         if (edit == null)
         	return;
 
-        edit.putString(KEY_APPVER,app_version);
-        edit.putLong(KEY_LOGDATE,log_date);
+        edit.putString(Setting.APPVER,app_version);
+        edit.putLong(Setting.LOGDATE,log_date);
         
         edit.commit();
 	}
@@ -451,15 +547,22 @@ public class Player extends Activity implements OnClickListener , NotifyBind
         if (pref == null)
         	return;
         
-        if ( fobj != null )
+        pauseDiag = pref.getBoolean(Setting.PAUSE_DIAG, false);
+        
+        if (PCMBound == null)
+        	return;
+        
+        if (fobj != null)
         {
-            fobj.openDirectory( pref.getString(KEY_LASTPATH, "") );
-            fobj.setCurrentFilePath( pref.getString(KEY_LASTFILE, "") );
+        	// 新規オブジェクトであった場合は設定する
+        	if (!PCMBound.isPlayed())
+            {
+        		fobj.openDirectory(pref.getString(Setting.LASTPATH, ""));
+                fobj.setCurrentFilePath(pref.getString(Setting.LASTFILE, ""));
+            }
         }
-        if ( PCMBound != null )
-        {
-        	PCMBound.setVolume( pref.getInt( KEY_VOLUME , 100) );
-        }
+        
+        PCMBound.setVolume(pref.getInt(Setting.VOLUME, 100));
 	}
 
 	// 現在の設定を保存する
@@ -473,17 +576,58 @@ public class Player extends Activity implements OnClickListener , NotifyBind
         if (edit == null)
         	return;
         
-        if ( fobj != null )
+        if (PCMBound == null)
+        	return;
+        
+        if (fobj != null && PCMBound.isPlayed())
         {
-        	edit.putString( KEY_LASTPATH, fobj.current_path );
-        	edit.putString( KEY_LASTFILE, fobj.path );
+        	edit.putString(Setting.LASTPATH, fobj.current_dir);
+        	edit.putString(Setting.LASTFILE, fobj.current_filepath);
         }
-        if ( PCMBound != null )
-        {
-        	edit.putInt( KEY_VOLUME , PCMBound.getVolume() );
-        }
+        
+        edit.putInt(Setting.VOLUME, PCMBound.getVolume());
     	edit.commit();
 	}
+	
+    private void dispInfoDiag()
+    {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        
+        StringBuilder sb = new StringBuilder();
+        sb.setLength(0);
+        sb.append(getString(R.string.app_name)).append(" ")
+        .append(getString(R.string.app_version)).append("\n\n");
+        
+        try {
+            Resources res = getResources();
+            InputStream text = res.openRawResource(R.raw.changelog);
+            
+            byte[] data = new byte[text.available()];
+            text.read(data);
+            text.close();
+            
+            sb.append(new String(data));
+            
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+        
+        builder.setMessage(sb)
+        .setCancelable(false)
+        .setPositiveButton("OK", new DialogInterface.OnClickListener()
+                           {
+            public void onClick(DialogInterface dialog,int id)
+            {
+                dialog.cancel();
+            }
+        });
+        
+        AlertDialog alert = builder.create();
+        alert.show();
+    }
+
     
 	/////////////////////////////
     // Activity遷移
@@ -493,8 +637,9 @@ public class Player extends Activity implements OnClickListener , NotifyBind
     	Log.d(TAG,"onPause");
     	// 現在の設定を保存する
     	savePref();
-        pcmService.doUnbindService( this );
-		doCancelTimer();
+        pcmService.doUnbindService(this);
+        PCMBound = null;
+		doStopUIThread();
 		
 		super.onPause();
     	saveAppPref();
@@ -546,27 +691,7 @@ public class Player extends Activity implements OnClickListener , NotifyBind
     	
     	if (!app_current_ver.equals(app_version))
     	{
-    		AlertDialog.Builder builder = new AlertDialog.Builder(this);
-    		
-    		StringBuilder sb = new StringBuilder();		
-    		sb.setLength(0);
-    		sb.append(getString(R.string.app_name)).append(" ")
-    		.append(getString(R.string.app_version)).append("\n")
-    		.append(getString(R.string.latest_info));
-    		
-    		builder.setMessage(sb)
-    		.setCancelable(false)
-    		.setPositiveButton("OK", new DialogInterface.OnClickListener()
-    		{
-    				public void onClick(DialogInterface dialog,int id)
-    				{
-    					dialog.cancel();
-    				}
-    		});
-    		
-    		AlertDialog alert = builder.create();
-    		alert.show();
-    		
+    		dispInfoDiag();
     		app_version = app_current_ver; 		
     	}
     	
@@ -589,8 +714,8 @@ public class Player extends Activity implements OnClickListener , NotifyBind
     // 曲選択を開く
     private void openSongSelector()
     {
-    	PCMBound.doSetPause(true);
-		Intent intent = new Intent(Player.this , FileDiag.class );
+    	if (pauseDiag) PCMBound.doSetPause(true);
+		Intent intent = new Intent(Player.this, FileDiag.class);
 		startActivityForResult(intent,0);
     }
     
@@ -647,6 +772,7 @@ public class Player extends Activity implements OnClickListener , NotifyBind
 			PCMBound.doSetLoop();
 			PCMBound.doUpdate();
 			break;
+		case R.id.filename_value:
 		case R.id.title_value:
 			openSongSelector();
 			break;
@@ -657,19 +783,11 @@ public class Player extends Activity implements OnClickListener , NotifyBind
 	public void onActivityResult(int reqCode,int result,Intent intent)
 	{
 		// ファイルダイアログ処理
-		if (reqCode == 0)
+		if (reqCode == REQ_FILE)
 		{
-			if ( PCMBound != null && result == RESULT_OK )	
-			{			
-				savePref();
-				
-				PCMBound.setFobj( fobj );
-				PCMBound.doPlaySong();
-			}
-			else
-			{
-				PCMBound.doSetPause(false);
-			}
+			returnFileDiag = true;
+			if (result == RESULT_OK)
+				isSongRequest = true;
 		}
 	}
 }

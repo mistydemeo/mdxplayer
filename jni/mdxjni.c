@@ -133,21 +133,23 @@ JNIEXPORT jbyteArray JNICALL Java_com_bkc_android_mdxplayer_PCMRender_sdrv_1titl
 
 	if ( op_mode == MODE_PMD )
 		pmd_get_title( title );
-		
-	
-	ret = (*env)->NewByteArray( env , strlen(title) );
+    
+    int len = strlen(title);
+
+	ret = (*env)->NewByteArray(env, len);
 
 	if (!ret)
 		return NULL;
 
-	bp = (*env)->GetByteArrayElements( env , ret , NULL );
+	bp = (*env)->GetByteArrayElements(env, ret, NULL);
 	
 	if (!bp)
 		return NULL;
+
+    // Improtant : don't forget NULL termination
+	memcpy(bp, title, len);
 	
-	strcpy(bp,title);
-	
-	(*env)->ReleaseByteArrayElements( env , ret , bp , 0 );
+	(*env)->ReleaseByteArrayElements(env, ret, bp, 0);
 	
 	return ret;
 }
@@ -234,7 +236,13 @@ JNIEXPORT jboolean JNICALL Java_com_bkc_android_mdxplayer_PCMRender_sdrv_1open
 		err = mdx_open( &mdx_data , (char *)file , pcmdir );
 	}
 	
-	output_log("freq = %d MAX_SIZE=%d DATE:%s TIME:%s",freq,MAX_SIZE,__DATE__,__TIME__);
+	output_log("freq = %d MAX_SIZE=%d",
+               freq,
+               MAX_SIZE);
+    
+    output_log("Library : DATE:%s TIME:%s",
+               __DATE__,
+               __TIME__);
 	
 	(*env)->ReleaseStringUTFChars( env , path , file );
 	
@@ -273,7 +281,7 @@ JNIEXPORT void JNICALL Java_com_bkc_android_mdxplayer_PCMRender_sdrv_1close
   (JNIEnv *env , jobject obj)
 {
 	if ( op_mode == MODE_MDX )
-		mdx_stop ( &mdx_data );
+		mdx_close(&mdx_data);
 		
 	if ( op_mode == MODE_PMD )
 		pmd_stop();

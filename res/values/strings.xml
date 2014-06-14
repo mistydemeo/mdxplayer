@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_label">MDXPLAY</string>
+    <string name="app_name">MDXPLAY for Android</string>
+    <string name="app_version">2014–06-08</string>
+
+    <string name="pcm_string">PCMディレクトリ選択</string>
+    <string name="pcm_summary">PCMディレクトリを選択します</string>
+    
+    <string name="sel_string">ファイル選択時の曲再生</string>
+    <string name="sel_on">再生します</string>
+    <string name="sel_off">停止します</string>
+    <string name="disppath_key">key_disppath</string>
+    <string name="disppath_string">フルパスの表示</string>
+    <string name="disppath_on">フルパスを表示します</string>
+    <string name="disppath_off">ファイル名のみ表示します</string>
+    <string name="seek_key">seek_key</string>
+    <string name="seek_string">シークバーの操作</string>
+    <string name="seek_on">操作を反映してシークします</string>
+    <string name="seek_off">操作を反映しません</string>
+    <string name="filepath_info">Choose MDX file</string>
+    <string name="def_freq">32000</string>
+    <string name="def_buf">8</string>
+    <string name="downloading">ダウンロード中</string>
+    <string name="cancel">キャンセル</string>
+    <string name="openerror">ファイルが開けませんでした \nファイル : %1$s</string>
+    <string name="song_string">曲を開く</string>
+    <string name="help_string">ヘルプ</string>
+    <string name="key_string">キービューア</string>
+    <string name="mask_string">マスク設定</string>
+    <string name="setting_string">設定</string>
+    <string name="songlen_string">曲長設定</string>
+    <string name="explain_string">説明</string>
+    <string name="error_string">エラー</string>
+    <string name="share_string">共有</string>
+    <string name="changelog_string">更新情報</string>
+    <string name="vol_string">音量</string>
+    <string name="buf_setting">バッファサイズ</string>
+    <string name="buf_summary">バッファサイズの変更は次の曲から反映されます</string>
+    <string name="freq_setting">再生周波数</string>
+    <string name="freq_summary">再生周波数の設定を行います</string>
+    <string name="delay_setting">キービューア更新間隔</string>
+    <string name="delay_summary">表示の更新間隔を設定します</string>
+    <string name="choose_string">選択</string>
+    <string name="folder_string">フォルダ:</string>
+    <string name="dateformat_string">yyyy-MM-dd HH:mm:ss</string>
+    <string name="timeinfo_string">00:00 / 05:00</string>
+    <string name="ok_string">OK</string>
+    <string name="space_string"></string>
+    <string name="ff_desc">早送り</string>
+    <string name="rev_desc">巻き戻し</string>
+    <string name="stop_desc">停止</string>
+    <string name="play_desc">再生</string>
+    <string name="note_info">o%1$d%2$s</string>
+    <string name="ch_info">CH%1$02d %2$s</string>
+    <string name="mailaddr">alf_bincyou@hotmail.com</string>
+    <string name="errorlog_string">エラーログ</string>
+    <string name="log_found">エラーログが見つかりました！</string>
+    <string name="log_file">errlog.txt</string>
+    <string name="nowplaying">Now Playing: %1$s / %2$s</string>
+    <string name="using">Using: %1$s</string>
+    <string name="delete_string">削除</string>
+    <string name="send_string">共有</string>
+    <string name="select_cb">select_cb</string>
+    <string name="freq">freq</string>
+    <string name="buffer">buffer</string>
+    <string name="delay">delay</string>
+    <string name="log_delete_message">ログファイルを削除しますか？</string>
+    <string name="error_sdcard">SDカードにアクセスできません!! </string>
+    <string name="album_image">album image</string>
+    <string name="_00_00">00:00</string>
+    <string name="_lt_lt_">&lt;&lt;</string>
+    <string name="_lt_">&lt;</string>
+    <string name="_gt_">&gt;</string>
+    <string name="_gt_gt_">&gt;&gt;</string>
+    
+    <string name="title_activity_mask">Mask Setting</string>
+    <string name="action_settings">Settings</string>
+    <string name="opm1_ch_1">OPM1 Ch.1</string>
+    <string name="opm1_ch_2">OPM1 Ch.2</string>
+    <string name="opm1_ch_3">OPM1 Ch.3</string>
+    <string name="opm1_ch_4">OPM1 Ch.4</string>
+    <string name="opm1_ch_5">OPM1 Ch.5</string>
+    <string name="opm1_ch_6">OPM1 Ch.6</string>
+    <string name="opm1_ch_7">OPM1 Ch.7</string>
+    <string name="opm1_ch_8">OPM1 Ch.8</string>
+
+    <string name="opm1_rev">OPM1 Rev</string>
+    <string name="opm1_set">OPM1 Set</string>
+
+    <string name="title_activity_ctrl">CtrlActivity</string>
+    <string name="version_">Version:</string>
+    <string name="loading_">Loading...</string>
+
+</resources>

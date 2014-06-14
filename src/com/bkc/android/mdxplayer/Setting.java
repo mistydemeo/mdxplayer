@@ -5,6 +5,15 @@ import android.preference.PreferenceActivity;
 
 public class Setting extends PreferenceActivity  {
 
+	public static final String PCMPATH  = "PCMPath";   
+	public static final String LASTFILE = "lastFile";
+	public static final String LASTPATH = "lastPath";
+	public static final String VOLUME = "volume";
+
+	public static final String APPVER = "app_version";
+	public static final String LOGDATE = "log_date";
+	public static final String PAUSE_DIAG = "pause_diag";
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);

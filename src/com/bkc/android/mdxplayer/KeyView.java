@@ -1,6 +1,7 @@
 package com.bkc.android.mdxplayer;
 
 import java.util.Timer;
+
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -26,7 +27,7 @@ public class KeyView extends Activity implements NotifyBind
 	private PCMService pcmService = new PCMService();
 	private PCMRender PCMBound = null;
 	
-	private String TAG = "KeyView";
+	private final static String TAG = "KeyView";
 
 	private Bitmap whiteBitmap = null;
 	private Bitmap blackBitmap = null;
@@ -75,7 +76,7 @@ public class KeyView extends Activity implements NotifyBind
 		private Thread thread = null;
 		
 		private int songCount = 0;
-		private String songTitle = "MDXPlayer";
+		private String songTitle = "";
 				
 		String timeInfoString;
 		
@@ -400,6 +401,7 @@ public class KeyView extends Activity implements NotifyBind
 	private int topSide;	
 	private int bottomSide;
 	
+	@SuppressWarnings("deprecation")
 	private void getScreenSize()
 	{
 		Display disp = ((WindowManager)getSystemService(WINDOW_SERVICE))

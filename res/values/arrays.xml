@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string-array name="freq_name">
+        <item>44KHz</item>
+        <item>32KHz</item>
+        <item>22KHz</item>
+        <item>11KHz</item>
+    </string-array>
+    <string-array name="freq_value">
+        <item>44100</item>
+        <item>32000</item>
+        <item>22050</item>
+        <item>11025</item>
+    </string-array>
+    <string-array name="buf_value">
+        <item>2</item>
+        <item>4</item>
+        <item>8</item>
+        <item>12</item>
+        <item>16</item>
+    </string-array>
+    <string-array name="delay_name">
+        <item>15ms</item>
+        <item>30ms</item>
+        <item>50ms</item>
+        <item>100ms</item>
+    </string-array>
+    <string-array name="delay_value">
+        <item>15</item>
+        <item>30</item>
+        <item>50</item>
+        <item>100</item>
+    </string-array>
+
+</resources>
